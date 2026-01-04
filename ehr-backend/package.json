@@ -1,0 +1,53 @@
+{
+  "name": "ehr-backend",
+  "version": "1.0.0",
+  "description": "EHR Blockchain Backend API",
+  "main": "dist/server.js",
+  "scripts": {
+    "dev": "NODE_ENV=development nodemon --exec ts-node -r tsconfig-paths/register src/server.ts",
+    "devEnv": "NODE_ENV=development node -r dotenv/config -r tsconfig-paths/register dist/server.js dotenv_config_path=.env.dev",
+    "prodEnv": "NODE_ENV=production node -r dotenv/config -r tsconfig-paths/register dist/server.js dotenv_config_path=.env",
+    "production": "NODE_ENV=production node -r tsconfig-paths/register dist/server.js",
+    "build": "rimraf dist && tsc",
+    "build:production": "rimraf dist && tsc && node scripts/build.js",
+    "prisma:generate": "NODE_ENV=development prisma generate",
+    "prisma:migrate": "NODE_ENV=development prisma migrate dev",
+    "prisma:db-push": "NODE_ENV=development prisma db push",
+    "prisma:studio": "NODE_ENV=development prisma studio",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": ["ehr", "blockchain", "healthcare", "api"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^7.2.0",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "ethers": "^6.16.0",
+    "express": "^5.2.1",
+    "ioredis": "^5.8.2",
+    "ipfs-http-client": "^60.0.1",
+    "jsonwebtoken": "^9.0.3",
+    "morgan": "^1.10.1",
+    "prisma": "^7.2.0",
+    "socket.io": "^4.8.3",
+    "web3": "^4.16.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/morgan": "^1.9.10",
+    "@types/node": "^25.0.3",
+    "@types/socket.io": "^3.0.2",
+    "javascript-obfuscator": "^5.1.0",
+    "nodemon": "^3.1.11",
+    "rimraf": "^6.1.2",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.9.3"
+  }
+}

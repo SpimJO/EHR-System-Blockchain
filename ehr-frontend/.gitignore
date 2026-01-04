@@ -10,6 +10,9 @@ dist-ssr
 *.local
 
 # Environment files
+.env
+.env.development
+.env.production
 .env.local
 .env.*.local
 
@@ -18,6 +21,7 @@ dist-ssr
 !.vscode/extensions.json
 .idea
 .DS_Store
+.github/
 *.suo
 *.ntvs*
 *.njsproj

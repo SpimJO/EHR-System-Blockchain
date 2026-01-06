@@ -7,17 +7,46 @@ datasource db {
 }
 
 model User {
-  id         String   @id @default(uuid())
-  fullName   String
-  email      String   @unique
-  password   String
-  role       Role
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(uuid())
+  fullName    String
+  email       String   @unique
+  password    String
+  role        Role
+  dateOfBirth DateTime?
+  gender      Gender?
+  bloodGroup  String?
+  phoneNumber String?
+  address     String?
+  medicalRecords MedicalRecord[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 }
+
+model MedicalRecord {
+  id            String   @id @default(uuid())
+  patientId     String
+  patient       User     @relation(fields: [patientId], references: [id])
+  title         String
+  recordType    String?
+  ipfsHash      String   @unique
+  encryption    String   @default("AES-128")
+  fileSize      Int
+  uploadedAt    DateTime @default(now())
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
 
 enum Role {
   PATIENT
   DOCTOR
   STAFF
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
 }

@@ -3,6 +3,7 @@
 .env.dev
 .env.local
 .env.*.local
+.env.blockchain.example
 
 # Dependencies
 node_modules/

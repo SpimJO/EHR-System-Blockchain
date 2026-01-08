@@ -1,0 +1,220 @@
+[
+  {
+    "type": "function",
+    "name": "uploadRecord",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      {
+        "name": "recordId",
+        "type": "string"
+      },
+      {
+        "name": "ipfsHash",
+        "type": "string"
+      }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "requestAccess",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      {
+        "name": "patientAddress",
+        "type": "address"
+      }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "approveAccess",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      {
+        "name": "requesterAddress",
+        "type": "address"
+      }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "denyAccess",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      {
+        "name": "requesterAddress",
+        "type": "address"
+      }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "revokeAccess",
+    "stateMutability": "nonpayable",
+    "inputs": [
+      {
+        "name": "authorizedAddress",
+        "type": "address"
+      }
+    ],
+    "outputs": []
+  },
+  {
+    "type": "function",
+    "name": "getPatientRecordCount",
+    "stateMutability": "view",
+    "inputs": [
+      {
+        "name": "patientAddress",
+        "type": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "uint256"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "getAuthorizedUsers",
+    "stateMutability": "view",
+    "inputs": [
+      {
+        "name": "patientAddress",
+        "type": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address[]"
+      }
+    ]
+  },
+  {
+    "type": "function",
+    "name": "getPendingAccessRequests",
+    "stateMutability": "view",
+    "inputs": [
+      {
+        "name": "patientAddress",
+        "type": "address"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "",
+        "type": "tuple[]",
+        "components": [
+          {
+            "name": "requester",
+            "type": "address"
+          },
+          {
+            "name": "requestedAt",
+            "type": "uint256"
+          },
+          {
+            "name": "status",
+            "type": "uint8"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "RecordUploaded",
+    "inputs": [
+      {
+        "name": "patientAddress",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "recordId",
+        "type": "string",
+        "indexed": false
+      },
+      {
+        "name": "ipfsHash",
+        "type": "string",
+        "indexed": false
+      },
+      {
+        "name": "timestamp",
+        "type": "uint256",
+        "indexed": false
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "AccessGranted",
+    "inputs": [
+      {
+        "name": "patientAddress",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "authorizedUser",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "timestamp",
+        "type": "uint256",
+        "indexed": false
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "AccessRevoked",
+    "inputs": [
+      {
+        "name": "patientAddress",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "revokedUser",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "timestamp",
+        "type": "uint256",
+        "indexed": false
+      }
+    ]
+  },
+  {
+    "type": "event",
+    "name": "AccessRequested",
+    "inputs": [
+      {
+        "name": "patientAddress",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "requester",
+        "type": "address",
+        "indexed": true
+      },
+      {
+        "name": "timestamp",
+        "type": "uint256",
+        "indexed": false
+      }
+    ]
+  }
+]

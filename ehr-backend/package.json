@@ -16,11 +16,15 @@
     "prisma:studio": "NODE_ENV=development prisma studio",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["ehr", "blockchain", "healthcare", "api"],
+  "keywords": [
+    "ehr",
+    "blockchain",
+    "healthcare",
+    "api"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@prisma/client": "^7.2.0",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
@@ -30,12 +34,12 @@
     "ipfs-http-client": "^60.0.1",
     "jsonwebtoken": "^9.0.3",
     "morgan": "^1.10.1",
-    "prisma": "^7.2.0",
     "socket.io": "^4.8.3",
     "web3": "^4.16.0",
     "zod": "^3.25.76"
   },
   "devDependencies": {
+    "@prisma/client": "^7.2.0",
     "@types/bcryptjs": "^3.0.0",
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.6",
@@ -43,8 +47,10 @@
     "@types/morgan": "^1.9.10",
     "@types/node": "^25.0.3",
     "@types/socket.io": "^3.0.2",
+    "dotenv-cli": "^11.0.0",
     "javascript-obfuscator": "^5.1.0",
     "nodemon": "^3.1.11",
+    "prisma": "^7.2.0",
     "rimraf": "^6.1.2",
     "ts-node": "^10.9.2",
     "tsconfig-paths": "^4.2.0",

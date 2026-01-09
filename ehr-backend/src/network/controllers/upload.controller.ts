@@ -1,10 +1,19 @@
 import Api from "@/lib/api";
 import { Request, Response, NextFunction } from "express";
-import { prisma } from "@/db/prisma";
+import prisma from "@/db/prisma";
 import ehrBlockchainService from "@/blockchain/ehrService";
 import { encryptFile } from "@/lib/encryption";
 import { uploadToIPFS } from "@/lib/ipfs";
 import multer from "multer";
+
+// Extend Express Request type to include file
+declare global {
+    namespace Express {
+        interface Request {
+            file?: multer.File;
+        }
+    }
+}
 
 /**
  * Upload Controller
@@ -57,13 +66,13 @@ class UploadController extends Api {
 
             // Validate user is patient
             if (userRole !== "PATIENT") {
-                this.error(res, "Access denied. Patient role required.", 403);
+                this.error(res, 403, "Access denied. Patient role required.");
                 return;
             }
 
             // Validate file exists
             if (!req.file) {
-                this.error(res, "No file uploaded", 400);
+                this.error(res, 400, "No file uploaded");
                 return;
             }
 
@@ -71,13 +80,12 @@ class UploadController extends Api {
             const {
                 title,
                 recordType,
-                uploadedAt,
-                description // Optional, UI-only
+                uploadedAt
             } = req.body;
 
             // Validate required fields
             if (!title) {
-                this.error(res, "Title is required", 400);
+                this.error(res, 400, "Title is required");
                 return;
             }
 
@@ -86,7 +94,7 @@ class UploadController extends Api {
             if (uploadedAt) {
                 recordDate = new Date(uploadedAt);
                 if (isNaN(recordDate.getTime())) {
-                    this.error(res, "Invalid date format", 400);
+                    this.error(res, 400, "Invalid date format");
                     return;
                 }
             } else {

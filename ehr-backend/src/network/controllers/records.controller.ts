@@ -1,6 +1,6 @@
 import Api from "@/lib/api";
 import { Request, Response, NextFunction } from "express";
-import { prisma } from "@/db/prisma";
+import prisma from "@/db/prisma";
 import ehrBlockchainService from "@/blockchain/ehrService";
 
 /**
@@ -34,7 +34,7 @@ class RecordsController extends Api {
 
             // Validate user is patient
             if (userRole !== "PATIENT") {
-                this.error(res, "Access denied. Patient role required.", 403);
+                this.error(res, 403, "Access denied. Patient role required.");
                 return;
             }
 
@@ -49,7 +49,7 @@ class RecordsController extends Api {
             });
 
             if (!user) {
-                this.error(res, "User not found", 404);
+                this.error(res, 404, "User not found");
                 return;
             }
 
@@ -117,11 +117,10 @@ class RecordsController extends Api {
     public async getRecordById(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const userId = req.user?.id;
-            const userRole = req.user?.role;
             const recordId = req.params.id;
 
             if (!recordId) {
-                this.error(res, "Record ID is required", 400);
+                this.error(res, 400, "Record ID is required");
                 return;
             }
 
@@ -149,13 +148,13 @@ class RecordsController extends Api {
             });
 
             if (!record) {
-                this.error(res, "Medical record not found", 404);
+                this.error(res, 404, "Medical record not found");
                 return;
             }
 
             // Verify ownership (Prisma level)
             if (record.patientId !== userId) {
-                this.error(res, "Access denied. You do not own this record.", 403);
+                this.error(res, 403, "Access denied. You do not own this record.");
                 return;
             }
 

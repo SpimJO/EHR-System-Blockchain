@@ -1,6 +1,5 @@
 import Api from "@/lib/api";
 import { Request, Response, NextFunction } from "express";
-import { prisma } from "@/db/prisma";
 import ehrBlockchainService from "@/blockchain/ehrService";
 
 /**
@@ -29,12 +28,11 @@ class PermissionsController extends Api {
      */
     public async getMyPermissions(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const userId = req.user?.id;
             const userRole = req.user?.role;
 
             // Validate user is patient
             if (userRole !== "PATIENT") {
-                this.error(res, "Access denied. Patient role required.", 403);
+                this.error(res, 403, "Access denied. Patient role required.");
                 return;
             }
 
@@ -98,19 +96,18 @@ class PermissionsController extends Api {
      */
     public async revokePermission(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const userId = req.user?.id;
             const userRole = req.user?.role;
             const authorizedAddress = req.params.userAddress;
 
             // Validate user is patient
             if (userRole !== "PATIENT") {
-                this.error(res, "Access denied. Patient role required.", 403);
+                this.error(res, 403, "Access denied. Patient role required.");
                 return;
             }
 
             // Validate authorized address
             if (!authorizedAddress || !authorizedAddress.startsWith("0x")) {
-                this.error(res, "Invalid user address", 400);
+                this.error(res, 400, "Invalid user address");
                 return;
             }
 
@@ -120,7 +117,7 @@ class PermissionsController extends Api {
             // Optional: Verify user currently has access
             const authorizedUsers = await ehrBlockchainService.getAuthorizedUsers(patientBlockchainAddress);
             if (!authorizedUsers.includes(authorizedAddress)) {
-                this.error(res, "User does not have access to revoke", 400);
+                this.error(res, 400, "User does not have access to revoke");
                 return;
             }
 

@@ -1,6 +1,6 @@
 import Api from "@/lib/api";
 import { Request, Response, NextFunction } from "express";
-import { prisma } from "@/db/prisma";
+import prisma from "@/db/prisma";
 import { Gender } from "@prisma/client";
 
 /**
@@ -24,7 +24,7 @@ class ProfileController extends Api {
             const userId = req.user?.id;
 
             if (!userId) {
-                this.error(res, "User not authenticated", 401);
+                this.error(res, 401, "User not authenticated");
                 return;
             }
 
@@ -48,7 +48,7 @@ class ProfileController extends Api {
             });
 
             if (!user) {
-                this.error(res, "User not found", 404);
+                this.error(res, 404, "User not found");
                 return;
             }
 
@@ -82,7 +82,7 @@ class ProfileController extends Api {
             const userId = req.user?.id;
 
             if (!userId) {
-                this.error(res, "User not authenticated", 401);
+                this.error(res, 401, "User not authenticated");
                 return;
             }
 
@@ -98,7 +98,7 @@ class ProfileController extends Api {
 
             // Validate gender enum if provided
             if (gender && !Object.values(Gender).includes(gender)) {
-                this.error(res, "Invalid gender value. Must be MALE, FEMALE, or OTHER", 400);
+                this.error(res, 400, "Invalid gender value. Must be MALE, FEMALE, or OTHER");
                 return;
             }
 
@@ -107,13 +107,13 @@ class ProfileController extends Api {
             if (dateOfBirth) {
                 parsedDateOfBirth = new Date(dateOfBirth);
                 if (isNaN(parsedDateOfBirth.getTime())) {
-                    this.error(res, "Invalid date of birth format", 400);
+                    this.error(res, 400, "Invalid date of birth format");
                     return;
                 }
 
                 // Ensure date is not in the future
                 if (parsedDateOfBirth > new Date()) {
-                    this.error(res, "Date of birth cannot be in the future", 400);
+                    this.error(res, 400, "Date of birth cannot be in the future");
                     return;
                 }
             }
@@ -129,7 +129,7 @@ class ProfileController extends Api {
 
             // Check if there's anything to update
             if (Object.keys(updateData).length === 0) {
-                this.error(res, "No valid fields to update", 400);
+                this.error(res, 400, "No valid fields to update");
                 return;
             }
 

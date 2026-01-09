@@ -1,7 +1,7 @@
 import Api from "@/lib/api";
 import { Request, Response, NextFunction } from "express";
 import ehrBlockchainService from "@/blockchain/ehrService";
-import { prisma } from "@/db/prisma";
+import prisma from "@/db/prisma";
 
 /**
  * Dashboard Controller
@@ -31,7 +31,7 @@ class DashboardController extends Api {
 
             // Validate user is patient
             if (userRole !== "PATIENT") {
-                this.error(res, "Access denied. Patient role required.", 403);
+                this.error(res, 403, "Access denied. Patient role required.");
                 return;
             }
 
@@ -48,7 +48,7 @@ class DashboardController extends Api {
             });
 
             if (!user) {
-                this.error(res, "User not found", 404);
+                this.error(res, 404, "User not found");
                 return;
             }
 

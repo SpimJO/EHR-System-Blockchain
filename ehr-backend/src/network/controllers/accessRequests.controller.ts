@@ -1,6 +1,5 @@
 import Api from "@/lib/api";
 import { Request, Response, NextFunction } from "express";
-import { prisma } from "@/db/prisma";
 import ehrBlockchainService from "@/blockchain/ehrService";
 
 /**
@@ -29,12 +28,11 @@ class AccessRequestsController extends Api {
      */
     public async getMyAccessRequests(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const userId = req.user?.id;
             const userRole = req.user?.role;
 
             // Validate user is patient
             if (userRole !== "PATIENT") {
-                this.error(res, "Access denied. Patient role required.", 403);
+                this.error(res, 403, "Access denied. Patient role required.");
                 return;
             }
 
@@ -92,19 +90,18 @@ class AccessRequestsController extends Api {
      */
     public async approveAccessRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const userId = req.user?.id;
             const userRole = req.user?.role;
             const requesterAddress = req.params.requesterAddress;
 
             // Validate user is patient
             if (userRole !== "PATIENT") {
-                this.error(res, "Access denied. Patient role required.", 403);
+                this.error(res, 403, "Access denied. Patient role required.");
                 return;
             }
 
             // Validate requester address
             if (!requesterAddress || !requesterAddress.startsWith("0x")) {
-                this.error(res, "Invalid requester address", 400);
+                this.error(res, 400, "Invalid requester address");
                 return;
             }
 
@@ -144,19 +141,18 @@ class AccessRequestsController extends Api {
      */
     public async denyAccessRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const userId = req.user?.id;
             const userRole = req.user?.role;
             const requesterAddress = req.params.requesterAddress;
 
             // Validate user is patient
             if (userRole !== "PATIENT") {
-                this.error(res, "Access denied. Patient role required.", 403);
+                this.error(res, 403, "Access denied. Patient role required.");
                 return;
             }
 
             // Validate requester address
             if (!requesterAddress || !requesterAddress.startsWith("0x")) {
-                this.error(res, "Invalid requester address", 400);
+                this.error(res, 400, "Invalid requester address");
                 return;
             }
 

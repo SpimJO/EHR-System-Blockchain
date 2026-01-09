@@ -6,6 +6,7 @@ import records from "./routes/records.route";
 import upload from "./routes/upload.route";
 import accessRequests from "./routes/accessRequests.route";
 import permissions from "./routes/permissions.route";
+import auditLog from "./routes/auditLog.route";
 import { baseRouter } from "@/lib/baseRouter";
 
 
@@ -19,6 +20,7 @@ class AppRouter extends baseRouter {
         this.router.use("/upload", upload);
         this.router.use("/access-requests", accessRequests);
         this.router.use("/permissions", permissions);
+        this.router.use("/audit-log", auditLog);
     }
 }
 

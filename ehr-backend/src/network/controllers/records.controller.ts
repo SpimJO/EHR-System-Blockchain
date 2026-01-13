@@ -43,8 +43,7 @@ class RecordsController extends Api {
                 where: { id: userId },
                 select: {
                     id: true,
-                    // TODO: Add blockchainAddress field
-                    // blockchainAddress: true
+                    blockchainAddress: true
                 }
             });
 
@@ -53,8 +52,12 @@ class RecordsController extends Api {
                 return;
             }
 
-            // TEMPORARY: Mock blockchain address
-            const patientBlockchainAddress = process.env.MOCK_PATIENT_ADDRESS || "0x0000000000000000000000000000000000000000";
+            if (!user.blockchainAddress) {
+                this.error(res, 400, "Blockchain address not found. Please contact support.");
+                return;
+            }
+
+            const patientBlockchainAddress = user.blockchainAddress;
 
             // 🔥 BLOCKCHAIN QUERY - Get record IDs owned by patient
             const blockchainRecordIds = await ehrBlockchainService.getPatientRecordIds(patientBlockchainAddress);
@@ -73,11 +76,10 @@ class RecordsController extends Api {
                     ipfsHash: true,
                     encryption: true,
                     fileSize: true,
-                    uploadedAt: true,
                     createdAt: true
                 },
                 orderBy: {
-                    uploadedAt: 'desc'
+                    createdAt: 'desc'
                 }
             });
 
@@ -135,7 +137,6 @@ class RecordsController extends Api {
                     ipfsHash: true,
                     encryption: true,
                     fileSize: true,
-                    uploadedAt: true,
                     createdAt: true,
                     patient: {
                         select: {

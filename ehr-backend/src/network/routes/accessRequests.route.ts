@@ -85,4 +85,52 @@ accessRequests.route("/:requesterAddress/deny").post(
         accessRequestsController.denyAccessRequest(req, res, next)
 );
 
+/**
+ * POST /access-requests/request
+ * 
+ * Request access to patient records (Figures 44, 49)
+ * 
+ * @middleware apiKeyMiddleware - Validates API key
+ * @middleware authMiddleware - Validates JWT token
+ * @middleware roleGuard(["DOCTOR", "STAFF"]) - Ensures user role is DOCTOR or STAFF
+ * 
+ * @body {string} patientId - Patient user ID
+ * @body {string} reason - Reason for access request (max 500 chars)
+ * 
+ * @returns {Object} Response object
+ * @returns {string} requestId - Database request ID
+ * @returns {string} transactionHash - Blockchain transaction hash
+ * @returns {string} status - Request status
+ * 
+ * HYBRID OPERATION - Creates Prisma record + blockchain transaction
+ */
+accessRequests.route("/request").post(
+    apiKeyMiddleware,
+    authMiddleware,
+    roleGuard(["DOCTOR", "STAFF"]),
+    (req: Request, res: Response, next: NextFunction) => 
+        accessRequestsController.requestAccess(req, res, next)
+);
+
+/**
+ * GET /access-requests/my-outgoing
+ * 
+ * Get list of access requests I (doctor/staff) have sent
+ * 
+ * @middleware apiKeyMiddleware - Validates API key
+ * @middleware authMiddleware - Validates JWT token
+ * @middleware roleGuard(["DOCTOR", "STAFF"]) - Ensures user role is DOCTOR or STAFF
+ * 
+ * @returns {Object} Response object
+ * @returns {number} total - Total number of requests
+ * @returns {Array} requests - Array of request objects
+ */
+accessRequests.route("/my-outgoing").get(
+    apiKeyMiddleware,
+    authMiddleware,
+    roleGuard(["DOCTOR", "STAFF"]),
+    (req: Request, res: Response, next: NextFunction) => 
+        accessRequestsController.getMyOutgoingRequests(req, res, next)
+);
+
 export default accessRequests;

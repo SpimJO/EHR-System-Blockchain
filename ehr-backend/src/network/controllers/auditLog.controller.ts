@@ -62,8 +62,17 @@ class AuditLogController extends Api {
             }
 
             // Get patient blockchain address
-            // TODO: Replace with actual user.blockchainAddress
-            const patientBlockchainAddress = process.env.MOCK_PATIENT_ADDRESS || "0x0000000000000000000000000000000000000000";
+            const user = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { blockchainAddress: true }
+            });
+
+            if (!user || !user.blockchainAddress) {
+                this.error(res, 400, "Blockchain address not found. Please contact support.");
+                return;
+            }
+
+            const patientBlockchainAddress = user.blockchainAddress;
 
             console.log(`📜 Fetching audit log for: ${patientBlockchainAddress}`);
 

@@ -7,6 +7,9 @@ import upload from "./routes/upload.route";
 import accessRequests from "./routes/accessRequests.route";
 import permissions from "./routes/permissions.route";
 import auditLog from "./routes/auditLog.route";
+import profileDoctor from "./routes/profileDoctor.route";
+import profileStaff from "./routes/profileStaff.route";
+import patients from "./routes/patients.route";
 import { baseRouter } from "@/lib/baseRouter";
 
 
@@ -21,6 +24,9 @@ class AppRouter extends baseRouter {
         this.router.use("/access-requests", accessRequests);
         this.router.use("/permissions", permissions);
         this.router.use("/audit-log", auditLog);
+        this.router.use("/profile/doctor", profileDoctor);
+        this.router.use("/profile/staff", profileStaff);
+        this.router.use("/patients", patients);
     }
 }
 

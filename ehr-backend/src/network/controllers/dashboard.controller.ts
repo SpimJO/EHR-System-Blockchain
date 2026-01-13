@@ -42,8 +42,7 @@ class DashboardController extends Api {
                     id: true,
                     fullName: true,
                     email: true,
-                    // TODO: Add blockchainAddress field to User model
-                    // blockchainAddress: true
+                    blockchainAddress: true
                 }
             });
 
@@ -52,9 +51,12 @@ class DashboardController extends Api {
                 return;
             }
 
-            // TEMPORARY: Mock blockchain address until schema is updated
-            // ⚠️ REPLACE THIS with actual user.blockchainAddress from database
-            const patientBlockchainAddress = process.env.MOCK_PATIENT_ADDRESS || "0x0000000000000000000000000000000000000000";
+            if (!user.blockchainAddress) {
+                this.error(res, 400, "Blockchain address not found. Please contact support.");
+                return;
+            }
+
+            const patientBlockchainAddress = user.blockchainAddress;
 
             // 🔥 BLOCKCHAIN QUERY (Source of Truth)
             const blockchainData = await ehrBlockchainService.getPatientDashboard(patientBlockchainAddress);

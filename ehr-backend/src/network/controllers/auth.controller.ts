@@ -5,6 +5,7 @@ import { Bcrypt } from "@/lib/bcrypt";
 import { HttpError } from "@/lib/error";
 import { CipherToken } from "@/lib/token";
 import { generateNonce, generateAuthMessage, verifySignature, isValidAddress } from "@/lib/metamask";
+import { generateWallet, encryptPrivateKey } from "@/lib/blockchain-wallet";
 import { Request, Response, NextFunction } from "express";
 
 // Temporary nonce storage (in production, use Redis)
@@ -15,7 +16,7 @@ class AuthController extends Api {
     private httpError = new HttpError()
     private cipherToken = new CipherToken(appConfig.ENC_KEY_SECRET, appConfig.CIPHER_KEY_SECRET);
 
-    public async login(req: Request, res: Response, next: NextFunction) {
+    public async login(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { email, password } = await req.body;
 
@@ -24,19 +25,21 @@ class AuthController extends Api {
             })
 
             if (!user) {
-                return this.httpError.notFound("User Not Found")
+                next(this.httpError.notFound("User Not Found"));
+                return;
             }
 
             const passwordMatch = await this.bcrypt.compare(password, user.password);
 
             if (!passwordMatch) {
-                return this.httpError.unauthorized("Invalid Credentials");
+                next(this.httpError.unauthorized("Invalid Credentials"));
+                return;
             }
 
             const encryptToken = await this.cipherToken.encrypt({
                 id: user.id,
-                name: user.name as string,
-                email: user.name as string,
+                name: user.fullName,
+                email: user.email,
                 expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 30,
                 issuedAt: Date.now()
             })
@@ -51,37 +54,88 @@ class AuthController extends Api {
         }
     }
 
-    public async register(req: Request, res: Response, next: NextFunction) {
+    public async register(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const { name, email, password } = await req.body;
+            const { fullName, email, password, role, gender, dateOfBirth } = req.body;
 
-            const user = await prisma.user.findUnique({
-                where: { email: email }
-            })
-
-            if (user) {
-                return this.httpError.conflict("Account is already taken")
+            // Validation
+            if (!fullName || !email || !password || !role) {
+                this.error(res, 400, "Full name, email, password, and role are required");
+                return;
             }
 
+            if (!['PATIENT', 'DOCTOR', 'STAFF'].includes(role)) {
+                this.error(res, 400, "Invalid role. Must be PATIENT, DOCTOR, or STAFF");
+                return;
+            }
+
+            // Check if user exists
+            const existingUser = await prisma.user.findUnique({
+                where: { email: email }
+            });
+
+            if (existingUser) {
+                next(this.httpError.conflict("Account is already taken"));
+                return;
+            }
+
+            // Hash password
             const passwordHashed = await this.bcrypt.hash(password);
 
+            // Generate blockchain wallet
+            const wallet = generateWallet();
+            const encryptedPrivateKey = encryptPrivateKey(wallet.privateKey);
+
+            console.log(`🔐 Generated blockchain wallet for ${email}: ${wallet.address}`);
+
+            // Create user with blockchain address
             await prisma.$transaction(async (tx) => {
-                await tx.user.create({
+                // Create user
+                const newUser = await tx.user.create({
                     data: {
-                        name: name,
+                        fullName: fullName,
                         email: email,
-                        password: passwordHashed
+                        password: passwordHashed,
+                        role: role,
+                        blockchainAddress: wallet.address,
+                        privateKeyHash: encryptedPrivateKey
                     }
-                })
-            })
+                });
 
-            const data = {
+                // Create role-specific profile
+                if (role === 'DOCTOR') {
+                    await tx.doctorProfile.create({
+                        data: {
+                            userId: newUser.id,
+                            designation: 'Not Specified'
+                        }
+                    });
+                } else if (role === 'STAFF') {
+                    await tx.staffProfile.create({
+                        data: {
+                            userId: newUser.id,
+                            designation: 'Not Specified'
+                        }
+                    });
+                } else if (role === 'PATIENT') {
+                    await tx.patientProfile.create({
+                        data: {
+                            userId: newUser.id,
+                            dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : new Date(),
+                            gender: gender || 'PREFER_NOT_TO_SAY',
+                            bloodGroup: 'UNKNOWN'
+                        }
+                    });
+                }
+            });
 
-            }
+            this.created(res, {
+                blockchainAddress: wallet.address
+            }, "User registered successfully with blockchain wallet");
 
-            this.created(res, data, "Register Route")
         } catch (error) {
-            next(error)
+            console.error("Error in register:", error);
+            next(error);
         }
     }
 
@@ -90,10 +144,10 @@ class AuthController extends Api {
             const user = await prisma.user.findUnique({
                 where: { id: req.user.id },
                 select: {
-                    name: true,
+                    fullName: true,
                     email: true,
-                    created_at: true,
-                    updated_at: true
+                    createdAt: true,
+                    updatedAt: true
                 }
             })
 
@@ -117,13 +171,14 @@ class AuthController extends Api {
      * @returns {string} nonce - Random nonce to sign
      * @returns {string} message - Full message to sign
      */
-    public async requestMetaMaskNonce(req: Request, res: Response, next: NextFunction) {
+    public async requestMetaMaskNonce(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { walletAddress } = req.body;
 
             // Validate wallet address
             if (!walletAddress || !isValidAddress(walletAddress)) {
-                return this.httpError.badRequest("Invalid wallet address");
+                next(this.httpError.badRequest("Invalid wallet address"));
+                return;
             }
 
             // Generate nonce
@@ -164,30 +219,34 @@ class AuthController extends Api {
      * @body {string} signature - Signed message from MetaMask
      * @returns {string} token - JWT token
      */
-    public async verifyMetaMaskSignature(req: Request, res: Response, next: NextFunction) {
+    public async verifyMetaMaskSignature(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { walletAddress, signature } = req.body;
 
             // Validate inputs
             if (!walletAddress || !signature) {
-                return this.httpError.badRequest("Wallet address and signature required");
+                next(this.httpError.badRequest("Wallet address and signature required"));
+                return;
             }
 
             if (!isValidAddress(walletAddress)) {
-                return this.httpError.badRequest("Invalid wallet address");
+                next(this.httpError.badRequest("Invalid wallet address"));
+                return;
             }
 
             // Get stored nonce
             const storedData = nonceStore.get(walletAddress.toLowerCase());
             if (!storedData) {
-                return this.httpError.unauthorized("Nonce not found. Please request a new nonce.");
+                next(this.httpError.unauthorized("Nonce not found. Please request a new nonce."));
+                return;
             }
 
             // Check if nonce expired (5 minutes)
             const NONCE_EXPIRY = 5 * 60 * 1000;
             if (Date.now() - storedData.createdAt > NONCE_EXPIRY) {
                 nonceStore.delete(walletAddress.toLowerCase());
-                return this.httpError.unauthorized("Nonce expired. Please request a new nonce.");
+                next(this.httpError.unauthorized("Nonce expired. Please request a new nonce."));
+                return;
             }
 
             // Verify signature
@@ -197,12 +256,14 @@ class AuthController extends Api {
             try {
                 recoveredAddress = verifySignature(message, signature);
             } catch (error) {
-                return this.httpError.unauthorized("Invalid signature");
+                next(this.httpError.unauthorized("Invalid signature"));
+                return;
             }
 
             // Verify recovered address matches provided address
             if (recoveredAddress !== walletAddress.toLowerCase()) {
-                return this.httpError.unauthorized("Signature verification failed");
+                next(this.httpError.unauthorized("Signature verification failed"));
+                return;
             }
 
             // Delete used nonce

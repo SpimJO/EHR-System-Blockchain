@@ -472,6 +472,66 @@ class EHRBlockchainService {
             return null;
         }
     }
+
+    /**
+     * Get list of patients that doctor/staff has been granted access to (Figure 47)
+     * 
+     * Queries blockchain for AccessGranted events WHERE authorizedUser = doctorAddress
+     * 
+     * @param doctorAddress - Doctor or staff blockchain address
+     * @returns Array of patients with record counts
+     */
+    public async getMyAuthorizedPatients(doctorAddress: string): Promise<Array<{
+        patientAddress: string;
+        grantedAt: number;
+        recordCount: number;
+    }>> {
+        try {
+            const currentBlock = await this.provider.getBlockNumber();
+            const fromBlock = 0; // Start from genesis for complete history
+
+            // Query AccessGranted events where authorizedUser = doctorAddress
+            // Note: The second parameter is the indexed authorizedUser
+            const filter = this.contract.filters.AccessGranted(null, doctorAddress);
+            const events = await this.contract.queryFilter(filter, fromBlock, currentBlock);
+
+            // Extract unique patient addresses
+            const patientMap = new Map<string, number>(); // address → grantedAt timestamp
+
+            for (const event of events) {
+                const eventLog = event as ethers.EventLog;
+                const patientAddress = eventLog.args?.patientAddress;
+                const block = await event.getBlock();
+                
+                if (patientAddress) {
+                    // Keep the earliest grant timestamp
+                    if (!patientMap.has(patientAddress)) {
+                        patientMap.set(patientAddress, block.timestamp);
+                    }
+                }
+            }
+
+            // For each patient, get record count
+            const patients = await Promise.all(
+                Array.from(patientMap.entries()).map(async ([patientAddress, grantedAt]) => {
+                    const recordCount = await this.getRecordCount(patientAddress);
+                    
+                    return {
+                        patientAddress,
+                        grantedAt,
+                        recordCount
+                    };
+                })
+            );
+
+            // Sort by most recently granted first
+            return patients.sort((a, b) => b.grantedAt - a.grantedAt);
+
+        } catch (error) {
+            console.error("Error fetching authorized patients:", error);
+            throw new Error("Failed to fetch authorized patients from blockchain");
+        }
+    }
 }
 
 // Export singleton instance

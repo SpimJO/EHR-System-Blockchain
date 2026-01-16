@@ -1,45 +1,47 @@
 import { RootRoute } from "./routers/root.route";
-import { DashboardRoute } from "./routers/dash.routes";
-import { authMiddleware } from "@/middleware/authMiddleware";
+import { DashboardRoute, PatientDashboardRoute, DoctorDashboardRoute, StaffDashboardRoute } from "./routers/dash.routes";
+import { guestOnlyMiddleware } from "@/middleware/authMiddleware";
 import { LoginRoute, RegisterRoute } from "./routers/auth.routes";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/sonner";
 import { createRootRoute, createRoute, Outlet } from "@tanstack/react-router";
 
-const queryClient = new QueryClient();
-
 export const rootRoute = createRootRoute({
-    component: () => <Outlet />,
+    component: () => (
+        <>
+            <Outlet />
+            <Toaster />
+        </>
+    ),
 });
 
 export const DashboardLayout = createRoute({
     getParentRoute: () => rootRoute,
     path: "/dashboard",
-    beforeLoad: async ({ location }) => {
-        await authMiddleware(location.pathname);
+    beforeLoad: async () => {
+        // UI Preview Mode - Authentication disabled for now
+        // await authMiddleware(location.pathname);
+        return null;
     },
-    component: () => (
-        <QueryClientProvider client={queryClient}>
-            <Outlet />
-        </QueryClientProvider>
-    )
+    component: () => <Outlet />
 })
 
 export const AuthLayout = createRoute({
     getParentRoute: () => rootRoute,
     path: "/auth",
-    beforeLoad: async ({ location }) => {
-        await authMiddleware(location.pathname);
+    beforeLoad: async () => {
+        // Redirect authenticated users away from auth pages.
+        // (Still allows direct access to /auth/login and /auth/register if not logged in.)
+        await guestOnlyMiddleware();
     },
-    component: () => (
-        <QueryClientProvider client={queryClient}>
-            <Outlet />
-        </QueryClientProvider>
-    )
+    component: () => <Outlet />
 })
 
 export const routerTree = rootRoute.addChildren([
     DashboardLayout.addChildren([
-        DashboardRoute
+        DashboardRoute,
+        PatientDashboardRoute,
+        DoctorDashboardRoute,
+        StaffDashboardRoute
     ]),
     AuthLayout.addChildren([
         LoginRoute,

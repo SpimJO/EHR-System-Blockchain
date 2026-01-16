@@ -11,6 +11,7 @@ export default {
         sm: 'calc(var(--radius) - 4px)',
       },
       colors: {
+        // Shadcn colors
         background: 'hsl(var(--background))',
         foreground: 'hsl(var(--foreground))',
         card: {
@@ -51,6 +52,25 @@ export default {
           '4': 'hsl(var(--chart-4))',
           '5': 'hsl(var(--chart-5))',
         },
+        // EHR custom colors from CSS
+        'ehr-blue': {
+          DEFAULT: '#2563eb',
+          dark: '#1e40af',
+          light: '#3b82f6',
+          50: '#dbeafe',
+          100: '#dbeafe',
+          200: '#93c5fd',
+          300: '#60a5fa',
+          400: '#3b82f6',
+          500: '#2563eb',
+          600: '#1e40af',
+          700: '#1e3a8a',
+          800: '#1e3a8a',
+          900: '#1e3a8a',
+        },
+      },
+      fontFamily: {
+        sans: ['Segoe UI', 'Tahoma', 'Geneva', 'Verdana', 'sans-serif'],
       },
     },
   },

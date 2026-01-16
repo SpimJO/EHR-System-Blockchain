@@ -22,7 +22,7 @@ export const authApi = {
 
     session: async (): Promise<AuthResponse> => {
         try {
-            const response: any = await api.post("/auth/session");
+            const response = await api.post("/auth/session");
             return response.data;
         } catch (error) {
             throw error;

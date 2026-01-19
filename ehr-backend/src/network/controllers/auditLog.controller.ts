@@ -1,7 +1,6 @@
 import Api from "@/lib/api";
 import { Request, Response, NextFunction } from "express";
-import ehrBlockchainService from "@/blockchain/ehrService";
-
+import ehrBlockchainService from "@/blockchain/ehrService";import prisma from "@/db/prisma";
 /**
  * Audit Log Controller
  * Provides immutable audit trail from blockchain events

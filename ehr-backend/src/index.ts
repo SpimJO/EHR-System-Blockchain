@@ -38,7 +38,7 @@ class index {
 
     private ErrorHandler(): void {
         this.app.use(
-            (error: any, req: Request, res: Response, next: NextFunction): void => {
+            (error: any, _req: Request, res: Response, _next: NextFunction): void => {
                 const statusCode = error.statusCode || 500;
                 const message = error.message || "Internal Server Error";
                 const rawErrors = error.rawErrors || [];

@@ -1,5 +1,9 @@
 import { HardhatUserConfig } from "hardhat/config";
 import "@nomicfoundation/hardhat-toolbox";
+import * as dotenv from "dotenv";
+
+// Load environment variables
+dotenv.config();
 
 const config: HardhatUserConfig = {
   solidity: {
@@ -12,15 +16,11 @@ const config: HardhatUserConfig = {
     }
   },
   networks: {
-    // Local Ganache network
+    // Local Ganache network (Network ID: 1337)
     ganache: {
-      url: "http://127.0.0.1:7545",
-      chainId: 1337,
-      accounts: [
-        // Add Ganache account private keys here after starting Ganache
-        // Example (from Ganache GUI - Account 0):
-        // "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
-      ]
+      url: process.env.BLOCKCHAIN_RPC_URL || "http://127.0.0.1:7545",
+      chainId: parseInt(process.env.BLOCKCHAIN_CHAIN_ID || "1337"),
+      accounts: process.env.BLOCKCHAIN_PRIVATE_KEY ? [process.env.BLOCKCHAIN_PRIVATE_KEY] : []
     },
     // Hardhat local network (alternative to Ganache)
     localhost: {

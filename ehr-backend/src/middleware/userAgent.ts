@@ -1,6 +1,6 @@
 import { UAParser } from 'ua-parser-js';
-import { UserAgentInfo, UserAgentOptions } from '@/types';
-import { Request, Response, NextFunction, RequestHandler } from 'express';
+import { UserAgentOptions } from '@/types';
+import { RequestHandler } from 'express';
 
 /**
  * User Agent Middleware for Production

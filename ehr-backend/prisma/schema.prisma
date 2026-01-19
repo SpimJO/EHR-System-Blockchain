@@ -14,18 +14,17 @@ model User {
   password String
   role     Role
 
-  // Blockchain integration - backend-generated wallet
+ 
   blockchainAddress String? @unique
-  privateKeyHash    String? // Encrypted private key for signing transactions
+  privateKeyHash    String? 
 
   medicalRecords MedicalRecord[]
   patientProfile PatientProfile?
   doctorProfile  DoctorProfile?
   staffProfile   StaffProfile?
 
-  // Access requests made BY this user (as doctor/staff)
+
   accessRequestsMade     AccessRequest[] @relation("RequesterRequests")
-  // Access requests received by this user (as patient)
   accessRequestsReceived AccessRequest[] @relation("PatientRequests")
 
   createdAt DateTime @default(now())
@@ -61,18 +60,18 @@ model MedicalRecord {
   updatedAt DateTime @updatedAt
 }
 
-// New model: Doctor profile information
+
 model DoctorProfile {
   id                String  @id @default(uuid())
   userId            String  @unique
-  designation       String // e.g., "Cardiologist", "Surgeon"
-  specialization    String? // Medical specialty
-  licenseNumber     String? @unique // Medical license/registration number
-  medicalId         String? @unique // Hospital/clinic medical ID
+  designation       String 
+  specialization    String? 
+  licenseNumber     String? @unique 
+  medicalId         String? @unique 
   phoneNumber       String?
-  department        String? // e.g., "Emergency", "Cardiology"
+  department        String? 
   city              String?
-  hospitalName      String? // Current hospital/clinic
+  hospitalName      String? 
   yearsOfExperience Int?
 
   createdAt DateTime @default(now())
@@ -80,14 +79,14 @@ model DoctorProfile {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// New model: Staff profile information
+
 model StaffProfile {
   id           String  @id @default(uuid())
   userId       String  @unique
-  designation  String // e.g., "Nurse", "Receptionist", "Admin"
+  designation  String 
   employeeId   String? @unique
   phoneNumber  String?
-  department   String? // e.g., "Emergency", "Admission"
+  department   String? 
   city         String?
   hospitalName String?
 
@@ -96,20 +95,17 @@ model StaffProfile {
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
-// New model: Access requests (OFF-CHAIN storage of request details)
 model AccessRequest {
   id          String        @id @default(uuid())
-  patientId   String // User ID of patient
-  requesterId String // User ID of doctor/staff requesting access
-  reason      String        @db.Text // Medical justification (OFF-CHAIN for privacy)
+  patientId   String 
+  requesterId String 
+  reason      String        @db.Text 
   status      RequestStatus @default(PENDING)
-
-  // Blockchain linkage
-  transactionHash String? // Hash of blockchain transaction (if approved/denied)
-  blockchainEvent String? // Event name: "AccessRequested", "AccessGranted", etc.
+  transactionHash String? 
+  blockchainEvent String? 
 
   requestedAt DateTime  @default(now())
-  respondedAt DateTime? // When patient approved/denied
+  respondedAt DateTime? 
 
   patient   User @relation("PatientRequests", fields: [patientId], references: [id], onDelete: Cascade)
   requester User @relation("RequesterRequests", fields: [requesterId], references: [id], onDelete: Cascade)

@@ -6,9 +6,9 @@ import { Request, Response, NextFunction } from 'express';
 
 
 const httpError = new HttpError()
-const cipherToken = new CipherToken(appConfig.ENC_KEY_SECRET, appConfig.CIPHER_KEY_SECRET);
+const cipherToken = new CipherToken(appConfig.ENC_KEY_SECRET as string, appConfig.CIPHER_KEY_SECRET as string);
 
-export const authMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+export const authMiddleware = async (req: Request, _res: Response, next: NextFunction): Promise<void> => {
     const authToken = req.headers?.authorization;
 
     if (!authToken?.startsWith("Bearer ")) {

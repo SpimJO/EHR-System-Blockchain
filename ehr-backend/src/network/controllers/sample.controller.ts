@@ -3,7 +3,7 @@ import { Request, Response, NextFunction } from "express";
 
 class SampleController extends Api {
 
-    public async sampleRoute(req: Request, res: Response, next: NextFunction): Promise<void> {
+    public async sampleRoute(_req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const data = {
                 message: "Sample Route Response"

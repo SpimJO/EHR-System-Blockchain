@@ -1,5 +1,5 @@
-import { HttpStatusCode } from "axios";
 import { Response } from "express";
+import { HttpStatusCode } from "./error";
 
 /**
  * Base API response interface

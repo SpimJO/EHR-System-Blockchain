@@ -3,7 +3,7 @@
  * @description Wrapper around bcrypt library providing password hashing and comparison functionality
  * @module lib/bcrypt
  */
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 
 /**
  * Default number of salt rounds for bcrypt

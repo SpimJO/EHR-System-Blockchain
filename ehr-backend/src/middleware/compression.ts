@@ -10,7 +10,7 @@ import { Request, Response } from 'express';
  * @param res - Express response object
  * @returns boolean indicating whether to compress the response
  */
-export const shouldCompress = (req: Request, res: Response): boolean => {
+export const shouldCompress = (req: Request, _res: Response): boolean => {
     if (req.headers['x-no-compression']) {
         return false;
     }

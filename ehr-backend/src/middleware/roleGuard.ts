@@ -4,7 +4,7 @@ import { HttpError } from "@/lib/error";
 const httpError = new HttpError();
 
 export const roleGuard = (requiredRole: string | string[]) => {
-	return (req: Request, res: Response, next: NextFunction) => {
+	return (req: Request, _res: Response, next: NextFunction) => {
 		const userRole = req.user?.role;
 
 		if (!userRole) {

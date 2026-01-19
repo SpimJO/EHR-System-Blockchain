@@ -1,7 +1,6 @@
 import "./utils/env";
 import index from ".";
 import http from "http";
-import { connectRedis } from "./db/redis";
 import { connectPrisma, disconnectPrisma } from "./db/prisma";
 import printAppInfo from "./utils/print-app-info";
 
@@ -14,7 +13,6 @@ const createServer = (process: NodeJS.Process) => {
     return async () => {
         try {
 
-            // await connectRedis();
             await connectPrisma();
             shutdown(server, process)
 

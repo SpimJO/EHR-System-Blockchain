@@ -66,7 +66,7 @@ contract EHRContract {
         _;
     }
 
-    modifier hasAccess(address _patient) {
+    modifier onlyAuthorized(address _patient) {
         require(
             msg.sender == _patient || authorizedUsers[_patient][msg.sender],
             "Access denied"
@@ -211,7 +211,7 @@ contract EHRContract {
     function getPatientRecords(address patientAddress) 
         external 
         view 
-        hasAccess(patientAddress)
+        onlyAuthorized(patientAddress)
         returns (MedicalRecord[] memory) 
     {
         return patientRecords[patientAddress];

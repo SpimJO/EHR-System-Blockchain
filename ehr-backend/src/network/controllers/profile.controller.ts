@@ -36,13 +36,17 @@ class ProfileController extends Api {
                     fullName: true,
                     email: true,
                     role: true,
-                    dateOfBirth: true,
-                    gender: true,
-                    bloodGroup: true,
-                    phoneNumber: true,
-                    address: true,
                     createdAt: true,
-                    updatedAt: true
+                    updatedAt: true,
+                    patientProfile: {
+                        select: {
+                            dateOfBirth: true,
+                            gender: true,
+                            bloodGroup: true,
+                            phoneNumber: true,
+                            address: true
+                        }
+                    }
                     // ❌ Password excluded for security
                 }
             });
@@ -121,35 +125,101 @@ class ProfileController extends Api {
             // Build update object (only include provided fields)
             const updateData: any = {};
             if (fullName !== undefined) updateData.fullName = fullName;
-            if (parsedDateOfBirth !== undefined) updateData.dateOfBirth = parsedDateOfBirth;
-            if (gender !== undefined) updateData.gender = gender;
-            if (bloodGroup !== undefined) updateData.bloodGroup = bloodGroup;
-            if (phoneNumber !== undefined) updateData.phoneNumber = phoneNumber;
-            if (address !== undefined) updateData.address = address;
 
-            // Check if there's anything to update
-            if (Object.keys(updateData).length === 0) {
-                this.error(res, 400, "No valid fields to update");
-                return;
+            // Check if there's anything to update on User
+            let updatedUser;
+            if (Object.keys(updateData).length > 0) {
+                // Update user profile
+                updatedUser = await prisma.user.update({
+                    where: { id: userId },
+                    data: updateData,
+                    select: {
+                        id: true,
+                        fullName: true,
+                        email: true,
+                        role: true,
+                        updatedAt: true,
+                        patientProfile: {
+                            select: {
+                                dateOfBirth: true,
+                                gender: true,
+                                bloodGroup: true,
+                                phoneNumber: true,
+                                address: true
+                            }
+                        }
+                    }
+                });
+            } else {
+                updatedUser = await prisma.user.findUnique({
+                    where: { id: userId },
+                    select: {
+                        id: true,
+                        fullName: true,
+                        email: true,
+                        role: true,
+                        updatedAt: true,
+                        patientProfile: {
+                            select: {
+                                dateOfBirth: true,
+                                gender: true,
+                                bloodGroup: true,
+                                phoneNumber: true,
+                                address: true
+                            }
+                        }
+                    }
+                });
             }
 
-            // Update user profile
-            const updatedUser = await prisma.user.update({
-                where: { id: userId },
-                data: updateData,
-                select: {
-                    id: true,
-                    fullName: true,
-                    email: true,
-                    role: true,
-                    dateOfBirth: true,
-                    gender: true,
-                    bloodGroup: true,
-                    phoneNumber: true,
-                    address: true,
-                    updatedAt: true
-                }
-            });
+            // Update patient profile if any patient-specific fields are provided
+            const patientUpdateData: any = {};
+            if (parsedDateOfBirth !== undefined) patientUpdateData.dateOfBirth = parsedDateOfBirth;
+            if (gender !== undefined) patientUpdateData.gender = gender;
+            if (bloodGroup !== undefined) patientUpdateData.bloodGroup = bloodGroup;
+            if (phoneNumber !== undefined) patientUpdateData.phoneNumber = phoneNumber;
+            if (address !== undefined) patientUpdateData.address = address;
+
+            if (Object.keys(patientUpdateData).length > 0) {
+                // Update or create patient profile
+                await prisma.patientProfile.upsert({
+                    where: { userId },
+                    update: patientUpdateData,
+                    create: {
+                        userId,
+                        dateOfBirth: parsedDateOfBirth || new Date(),
+                        gender: gender || 'OTHER',
+                        bloodGroup: bloodGroup || 'Unknown',
+                        ...patientUpdateData
+                    }
+                });
+
+                // Refetch user with updated patient profile
+                updatedUser = await prisma.user.findUnique({
+                    where: { id: userId },
+                    select: {
+                        id: true,
+                        fullName: true,
+                        email: true,
+                        role: true,
+                        updatedAt: true,
+                        patientProfile: {
+                            select: {
+                                dateOfBirth: true,
+                                gender: true,
+                                bloodGroup: true,
+                                phoneNumber: true,
+                                address: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            if (!updatedUser) {
+                this.error(res, 404, "User not found");
+                return;
+            }
 
             this.success(res, updatedUser, "Profile updated successfully");
 

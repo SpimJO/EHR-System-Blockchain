@@ -57,7 +57,7 @@ export const securityHeaders = () => {
     nocache(),
 
     // Add modern Permissions-Policy (replacement for Feature-Policy)
-    (req: Request, res: Response, next: NextFunction) => {
+    (_req: Request, res: Response, next: NextFunction) => {
       res.setHeader(
         "Permissions-Policy",
         "camera=(), microphone=(), geolocation=(), interest-cohort=(), magnetometer=(), gyroscope=(), payment=()"
@@ -66,7 +66,7 @@ export const securityHeaders = () => {
     },
 
     // Add Cross-Origin headers
-    (req: Request, res: Response, next: NextFunction) => {
+    (_req: Request, res: Response, next: NextFunction) => {
       res.setHeader("Cross-Origin-Embedder-Policy", "require-corp");
       res.setHeader("Cross-Origin-Opener-Policy", "same-origin");
       res.setHeader("Cross-Origin-Resource-Policy", "same-origin");

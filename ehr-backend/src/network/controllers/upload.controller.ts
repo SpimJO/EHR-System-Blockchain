@@ -10,7 +10,7 @@ import multer from "multer";
 declare global {
     namespace Express {
         interface Request {
-            file?: multer.File;
+            file?: Express.Multer.File;
         }
     }
 }
@@ -120,10 +120,6 @@ class UploadController extends Api {
             // Generate unique record ID
             const recordId = `${userId}-${Date.now()}`;
 
-            // Get user blockchain address
-            // TODO: Replace with actual user.blockchainAddress
-            const patientBlockchainAddress = process.env.MOCK_PATIENT_ADDRESS || "0x0000000000000000000000000000000000000000";
-
             // STEP 3: Write to blockchain (THIS HAPPENS BEFORE PRISMA)
             console.log("⛓️  Writing to blockchain...");
             const txHash = await ehrBlockchainService.uploadRecord(recordId, ipfsHash);
@@ -136,11 +132,12 @@ class UploadController extends Api {
                     id: recordId,
                     patientId: userId!,
                     title,
-                    recordType: recordType || null,
+                    recordType: recordType || 'General',
+                    description: `Encrypted medical record uploaded on ${recordDate.toISOString()}`,
                     ipfsHash,
                     encryption: "AES-128",
                     fileSize,
-                    uploadedAt: recordDate
+                    recordDate
                 }
             });
 
@@ -152,9 +149,9 @@ class UploadController extends Api {
                     id: medicalRecord.id,
                     title: medicalRecord.title,
                     recordType: medicalRecord.recordType,
+                    recordDate: medicalRecord.recordDate,
                     ipfsHash: medicalRecord.ipfsHash,
                     fileSize: medicalRecord.fileSize,
-                    uploadedAt: medicalRecord.uploadedAt,
                     encryption: medicalRecord.encryption
                 },
                 blockchain: {

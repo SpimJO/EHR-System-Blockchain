@@ -13,7 +13,7 @@ export = () => {
         "PORT",
         "VERSION",
         "BASEROUTE",
-        "REDIS_URL",
+        // "REDIS_URL",
         "ENC_KEY_SECRET",
         "CIPHER_KEY_SECRET",
         "DATABASE_URL"

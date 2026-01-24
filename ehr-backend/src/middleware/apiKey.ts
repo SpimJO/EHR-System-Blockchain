@@ -6,7 +6,7 @@ import { Request, Response, NextFunction } from "express";
 const httpError = new HttpError()
 
 export const apiKeyMiddleware = (req: Request, _res: Response, next: NextFunction) => {
-    const key = req.headers['api-key'];
+    const key = req.headers['x-api-key'] || req.headers['api-key'];
 
     if (!key) {
         next(httpError.notFound("Missing Api Key"))

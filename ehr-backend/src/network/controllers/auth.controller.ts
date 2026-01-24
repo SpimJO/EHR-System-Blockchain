@@ -40,6 +40,7 @@ class AuthController extends Api {
                 id: user.id,
                 name: user.fullName,
                 email: user.email,
+                role: user.role,
                 expiresAt: Date.now() + 1000 * 60 * 60 * 24 * 30,
                 issuedAt: Date.now()
             })
@@ -122,7 +123,7 @@ class AuthController extends Api {
                         data: {
                             userId: newUser.id,
                             dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : new Date(),
-                            gender: gender || 'PREFER_NOT_TO_SAY',
+                            gender: gender || 'OTHER',
                             bloodGroup: 'UNKNOWN'
                         }
                     });
@@ -174,6 +175,12 @@ class AuthController extends Api {
     public async requestMetaMaskNonce(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const { walletAddress } = req.body;
+
+            // Debug logging
+            console.log("📝 MetaMask Nonce Request:");
+            console.log("  - Body:", req.body);
+            console.log("  - walletAddress:", walletAddress);
+            console.log("  - isValid:", walletAddress ? isValidAddress(walletAddress) : 'undefined');
 
             // Validate wallet address
             if (!walletAddress || !isValidAddress(walletAddress)) {

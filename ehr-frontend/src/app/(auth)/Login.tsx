@@ -43,42 +43,52 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-ehr-blue-600 to-ehr-blue-800">
-      {/* Background overlay */}
-      <div className="fixed inset-0 bg-black/30 -z-10" />
+    <div className="min-h-screen flex items-center justify-center p-5 bg-background relative">
+      {/* Background Image & Overlay */}
+      <div
+        className="fixed inset-0 bg-cover bg-center -z-20"
+        style={{ backgroundImage: "url('/bg-image.png')" }}
+      />
+      <div className="fixed inset-0 bg-gradient-to-br from-amber-100/40 to-black/60 -z-10" />
 
       <div className="w-full max-w-6xl">
-        <div className="grid grid-cols-1 lg:grid-cols-2 bg-white rounded-2xl shadow-2xl overflow-hidden min-h-[600px]">
+        <div className="grid grid-cols-1 lg:grid-cols-2 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden min-h-[600px] border border-white/20">
           {/* Left Side - Branding */}
-          <div className="bg-gradient-to-br from-teal-700 to-teal-900 text-white p-12 lg:p-16 flex flex-col justify-center">
-            <div className="mb-12">
-              <ShieldCheckIcon className="w-16 h-16 mb-5 opacity-90" />
-              <h1 className="text-4xl font-bold mb-4 leading-tight">
-                Blockchain Based with AES-encryption for Decentralized EHR System
-              </h1>
-              <p className="text-lg opacity-90 leading-relaxed">
-                Secure, transparent, and patient-controlled healthcare records on the blockchain
-              </p>
-            </div>
+          <div className="bg-gradient-to-br from-amber-500/90 to-amber-700/90 text-white p-12 lg:p-16 flex flex-col justify-center relative overflow-hidden">
+            {/* Abstract Background Pattern */}
+            <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-white/10 rounded-full blur-3xl opacity-50"></div>
+            <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-black/10 rounded-full blur-3xl opacity-50"></div>
 
-            <div className="space-y-5">
-              <div className="flex items-center gap-4 p-4 bg-white/10 rounded-lg backdrop-blur-sm">
-                <LockIcon className="w-6 h-6 opacity-90" />
-                <span className="font-medium">AES-128 Encryption</span>
+            <div className="relative z-10">
+              <div className="mb-12">
+                <ShieldCheckIcon className="w-16 h-16 mb-5 text-white" />
+                <h1 className="text-4xl font-bold mb-4 leading-tight text-white drop-shadow-sm">
+                  Blockchain Based with AES-encryption for Decentralized EHR System
+                </h1>
+                <p className="text-lg opacity-90 leading-relaxed text-amber-50">
+                  Secure, transparent, and patient-controlled healthcare records on the blockchain
+                </p>
               </div>
-              <div className="flex items-center gap-4 p-4 bg-white/10 rounded-lg backdrop-blur-sm">
-                <ShieldCheckIcon className="w-6 h-6 opacity-90" />
-                <span className="font-medium">Blockchain Verified</span>
-              </div>
-              <div className="flex items-center gap-4 p-4 bg-white/10 rounded-lg backdrop-blur-sm">
-                <UserIcon className="w-6 h-6 opacity-90" />
-                <span className="font-medium">Patient Controlled</span>
+
+              <div className="space-y-5">
+                <div className="flex items-center gap-4 p-4 bg-white/10 rounded-xl backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors">
+                  <LockIcon className="w-6 h-6 text-amber-100" />
+                  <span className="font-medium text-white">AES-128 Encryption</span>
+                </div>
+                <div className="flex items-center gap-4 p-4 bg-white/10 rounded-xl backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors">
+                  <ShieldCheckIcon className="w-6 h-6 text-amber-100" />
+                  <span className="font-medium text-white">Blockchain Verified</span>
+                </div>
+                <div className="flex items-center gap-4 p-4 bg-white/10 rounded-xl backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors">
+                  <UserIcon className="w-6 h-6 text-amber-100" />
+                  <span className="font-medium text-white">Patient Controlled</span>
+                </div>
               </div>
             </div>
           </div>
 
           {/* Right Side - Login Form */}
-          <div className="p-12 lg:p-16 flex items-center justify-center">
+          <div className="p-12 lg:p-16 flex items-center justify-center bg-white">
             <div className="w-full max-w-md">
               <h2 className="text-3xl font-bold text-gray-900 mb-3">Welcome Back</h2>
               <p className="text-gray-500 mb-8">Please login to your account</p>
@@ -93,7 +103,7 @@ const Login = () => {
 
               {/* Success Message */}
               {success && (
-                <Alert className="mb-4 border-green-500 text-green-700">
+                <Alert className="mb-4 border-green-500 text-green-700 bg-green-50">
                   <CheckCircle2Icon className="h-4 w-4" />
                   <AlertDescription>{success}</AlertDescription>
                 </Alert>
@@ -103,12 +113,12 @@ const Login = () => {
               <form onSubmit={handleSubmit} className="space-y-5">
                 {/* User Role */}
                 <div className="space-y-2">
-                  <Label htmlFor="userRole" className="flex items-center gap-2">
-                    <UserIcon className="w-4 h-4" />
+                  <Label htmlFor="userRole" className="flex items-center gap-2 text-gray-700">
+                    <UserIcon className="w-4 h-4 text-primary" />
                     User Role
                   </Label>
                   <Select value={userRole} onValueChange={setUserRole}>
-                    <SelectTrigger>
+                    <SelectTrigger className="bg-gray-50 border-gray-200 h-11 focus:ring-primary">
                       <SelectValue placeholder="Select your role" />
                     </SelectTrigger>
                     <SelectContent>
@@ -121,8 +131,8 @@ const Login = () => {
 
                 {/* Email */}
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="flex items-center gap-2">
-                    <MailIcon className="w-4 h-4" />
+                  <Label htmlFor="email" className="flex items-center gap-2 text-gray-700">
+                    <MailIcon className="w-4 h-4 text-primary" />
                     Email / Username
                   </Label>
                   <Input
@@ -132,13 +142,14 @@ const Login = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
+                    className="bg-gray-50 border-gray-200 h-11 focus:border-primary focus:ring-primary"
                   />
                 </div>
 
                 {/* Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="password" className="flex items-center gap-2">
-                    <LockIcon className="w-4 h-4" />
+                  <Label htmlFor="password" className="flex items-center gap-2 text-gray-700">
+                    <LockIcon className="w-4 h-4 text-primary" />
                     Password
                   </Label>
                   <div className="relative">
@@ -149,12 +160,13 @@ const Login = () => {
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
+                      className="bg-gray-50 border-gray-200 h-11 pr-12 focus:border-primary focus:ring-primary"
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                      className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-gray-500 hover:text-primary transition-colors"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
@@ -173,36 +185,37 @@ const Login = () => {
                       id="rememberMe"
                       checked={rememberMe}
                       onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                      className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                     />
                     <Label
                       htmlFor="rememberMe"
-                      className="text-sm font-normal cursor-pointer"
+                      className="text-sm font-normal cursor-pointer text-gray-600 hover:text-gray-900"
                     >
                       Remember me
                     </Label>
                   </div>
-                  <Link
+                  <a
                     href="#"
-                    className="text-sm text-ehr-blue-600 hover:text-ehr-blue-700 font-medium"
+                    className="text-sm text-primary hover:text-amber-600 font-medium transition-colors"
                   >
                     Forgot Password?
-                  </Link>
+                  </a>
                 </div>
 
                 {/* Submit Button */}
-                <Button type="submit" className="w-full bg-ehr-blue-600 hover:bg-ehr-blue-700">
+                <Button type="submit" className="w-full h-11 text-base bg-primary hover:bg-amber-600 text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5">
                   <MailIcon className="w-4 h-4 mr-2" />
                   Login
                 </Button>
               </form>
 
               {/* Divider */}
-              <div className="relative my-6">
+              <div className="relative my-8">
                 <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300" />
+                  <div className="w-full border-t border-gray-200" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">OR</span>
+                  <span className="px-4 bg-white text-gray-500 font-medium">OR</span>
                 </div>
               </div>
 
@@ -210,23 +223,23 @@ const Login = () => {
               <Button
                 type="button"
                 variant="outline"
-                className="w-full border-2"
+                className="w-full h-11 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-700 font-medium"
                 onClick={handleMetaMaskLogin}
               >
                 <img
                   src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg"
                   alt="MetaMask"
-                  className="w-5 h-5 mr-2"
+                  className="w-5 h-5 mr-3"
                 />
                 Login with MetaMask
               </Button>
 
               {/* Register Link */}
-              <p className="mt-6 text-center text-sm text-gray-600">
+              <p className="mt-8 text-center text-sm text-gray-600">
                 Don't have an account?{' '}
                 <Link
                   to="/auth/register"
-                  className="text-ehr-blue-600 hover:text-ehr-blue-700 font-medium"
+                  className="text-primary hover:text-amber-600 font-semibold transition-colors"
                 >
                   Register here
                 </Link>

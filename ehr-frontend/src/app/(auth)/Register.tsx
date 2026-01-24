@@ -81,15 +81,21 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-5 bg-gradient-to-br from-ehr-blue-600 to-ehr-blue-800">
-      {/* Background overlay */}
-      <div className="fixed inset-0 bg-black/30 -z-10" />
+    <div className="min-h-screen flex items-center justify-center p-5 bg-background relative">
+      {/* Background Image & Overlay */}
+      <div
+        className="fixed inset-0 bg-cover bg-center -z-20"
+        style={{ backgroundImage: "url('/bg-image.png')" }}
+      />
+      <div className="fixed inset-0 bg-gradient-to-br from-amber-100/40 to-black/60 -z-10" />
 
-      <div className="w-full max-w-2xl bg-white rounded-2xl shadow-2xl p-8 lg:p-12">
+      <div className="w-full max-w-2xl bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 lg:p-12 border border-white/20">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <ShieldCheckIcon className="w-16 h-16 text-ehr-blue-600" />
+            <div className="p-3 bg-primary/10 rounded-full">
+              <ShieldCheckIcon className="w-12 h-12 text-primary" />
+            </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
           <p className="text-gray-500">Join the EHR Blockchain System</p>
@@ -105,7 +111,7 @@ const Register = () => {
 
         {/* Success Message */}
         {success && (
-          <Alert className="mb-4 border-green-500 text-green-700">
+          <Alert className="mb-4 border-green-500 text-green-700 bg-green-50">
             <CheckCircle2Icon className="h-4 w-4" />
             <AlertDescription>{success}</AlertDescription>
           </Alert>
@@ -115,12 +121,12 @@ const Register = () => {
         <form onSubmit={handleSubmit} className="space-y-5">
           {/* Role Selection */}
           <div className="space-y-2">
-            <Label htmlFor="role" className="flex items-center gap-2">
-              <UserIcon className="w-4 h-4" />
+            <Label htmlFor="role" className="flex items-center gap-2 text-gray-700">
+              <UserIcon className="w-4 h-4 text-primary" />
               Register As
             </Label>
             <Select value={userRole} onValueChange={(value) => setUserRole(value as UserRole)}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-gray-50 border-gray-200 h-11 focus:ring-primary">
                 <SelectValue placeholder="Select your role" />
               </SelectTrigger>
               <SelectContent>
@@ -133,8 +139,8 @@ const Register = () => {
 
           {/* Full Name */}
           <div className="space-y-2">
-            <Label htmlFor="fullName" className="flex items-center gap-2">
-              <UserIcon className="w-4 h-4" />
+            <Label htmlFor="fullName" className="flex items-center gap-2 text-gray-700">
+              <UserIcon className="w-4 h-4 text-primary" />
               Full Name
             </Label>
             <Input
@@ -144,13 +150,14 @@ const Register = () => {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
+              className="bg-gray-50 border-gray-200 h-11 focus:border-primary focus:ring-primary"
             />
           </div>
 
           {/* Email */}
           <div className="space-y-2">
-            <Label htmlFor="email" className="flex items-center gap-2">
-              <MailIcon className="w-4 h-4" />
+            <Label htmlFor="email" className="flex items-center gap-2 text-gray-700">
+              <MailIcon className="w-4 h-4 text-primary" />
               Email Address
             </Label>
             <Input
@@ -160,13 +167,14 @@ const Register = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
+              className="bg-gray-50 border-gray-200 h-11 focus:border-primary focus:ring-primary"
             />
           </div>
 
           {/* Password */}
           <div className="space-y-2">
-            <Label htmlFor="password" className="flex items-center gap-2">
-              <LockIcon className="w-4 h-4" />
+            <Label htmlFor="password" className="flex items-center gap-2 text-gray-700">
+              <LockIcon className="w-4 h-4 text-primary" />
               Password
             </Label>
             <div className="relative">
@@ -178,12 +186,13 @@ const Register = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
+                className="bg-gray-50 border-gray-200 h-11 pr-12 focus:border-primary focus:ring-primary"
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-gray-500 hover:text-primary transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
@@ -194,8 +203,8 @@ const Register = () => {
 
           {/* Confirm Password */}
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword" className="flex items-center gap-2">
-              <LockIcon className="w-4 h-4" />
+            <Label htmlFor="confirmPassword" className="flex items-center gap-2 text-gray-700">
+              <LockIcon className="w-4 h-4 text-primary" />
               Confirm Password
             </Label>
             <div className="relative">
@@ -207,12 +216,13 @@ const Register = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={8}
+                className="bg-gray-50 border-gray-200 h-11 pr-12 focus:border-primary focus:ring-primary"
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-gray-500 hover:text-primary transition-colors"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? (
@@ -226,14 +236,14 @@ const Register = () => {
 
           {/* Doctor-specific fields */}
           {userRole === 'doctor' && (
-            <div className="space-y-5 p-4 bg-blue-50 rounded-lg">
+            <div className="space-y-5 p-6 bg-blue-50/50 border border-blue-100 rounded-xl">
               <div className="space-y-2">
-                <Label htmlFor="specialty" className="flex items-center gap-2">
+                <Label htmlFor="specialty" className="flex items-center gap-2 text-blue-700">
                   <StethoscopeIcon className="w-4 h-4" />
                   Specialty
                 </Label>
                 <Select value={specialty} onValueChange={setSpecialty}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white border-blue-200 h-11 focus:ring-blue-500">
                     <SelectValue placeholder="Select specialty" />
                   </SelectTrigger>
                   <SelectContent>
@@ -248,7 +258,7 @@ const Register = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="licenseNumber" className="flex items-center gap-2">
+                <Label htmlFor="licenseNumber" className="flex items-center gap-2 text-blue-700">
                   <IdCardIcon className="w-4 h-4" />
                   Medical License Number
                 </Label>
@@ -258,6 +268,7 @@ const Register = () => {
                   placeholder="Enter license number"
                   value={licenseNumber}
                   onChange={(e) => setLicenseNumber(e.target.value)}
+                  className="bg-white border-blue-200 h-11 focus:border-blue-500"
                 />
               </div>
             </div>
@@ -265,14 +276,14 @@ const Register = () => {
 
           {/* Staff-specific fields */}
           {userRole === 'staff' && (
-            <div className="space-y-5 p-4 bg-purple-50 rounded-lg">
+            <div className="space-y-5 p-6 bg-purple-50/50 border border-purple-100 rounded-xl">
               <div className="space-y-2">
-                <Label htmlFor="department" className="flex items-center gap-2">
+                <Label htmlFor="department" className="flex items-center gap-2 text-purple-700">
                   <BuildingIcon className="w-4 h-4" />
                   Department
                 </Label>
                 <Select value={department} onValueChange={setDepartment}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white border-purple-200 h-11 focus:ring-purple-500">
                     <SelectValue placeholder="Select department" />
                   </SelectTrigger>
                   <SelectContent>
@@ -287,7 +298,7 @@ const Register = () => {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="employeeId" className="flex items-center gap-2">
+                <Label htmlFor="employeeId" className="flex items-center gap-2 text-purple-700">
                   <IdCardIcon className="w-4 h-4" />
                   Employee ID
                 </Label>
@@ -297,6 +308,7 @@ const Register = () => {
                   placeholder="Enter employee ID"
                   value={employeeId}
                   onChange={(e) => setEmployeeId(e.target.value)}
+                  className="bg-white border-purple-200 h-11 focus:border-purple-500"
                 />
               </div>
             </div>
@@ -304,9 +316,9 @@ const Register = () => {
 
           {/* Patient-specific fields */}
           {userRole === 'patient' && (
-            <div className="space-y-5 p-4 bg-green-50 rounded-lg">
+            <div className="space-y-5 p-6 bg-green-50/50 border border-green-100 rounded-xl">
               <div className="space-y-2">
-                <Label htmlFor="dateOfBirth" className="flex items-center gap-2">
+                <Label htmlFor="dateOfBirth" className="flex items-center gap-2 text-green-700">
                   <CalendarIcon className="w-4 h-4" />
                   Date of Birth
                 </Label>
@@ -315,15 +327,16 @@ const Register = () => {
                   type="date"
                   value={dateOfBirth}
                   onChange={(e) => setDateOfBirth(e.target.value)}
+                  className="bg-white border-green-200 h-11 focus:border-green-500"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="bloodGroup" className="flex items-center gap-2">
+                <Label htmlFor="bloodGroup" className="flex items-center gap-2 text-green-700">
                   <DropletIcon className="w-4 h-4" />
                   Blood Group
                 </Label>
                 <Select value={bloodGroup} onValueChange={setBloodGroup}>
-                  <SelectTrigger>
+                  <SelectTrigger className="bg-white border-green-200 h-11 focus:ring-green-500">
                     <SelectValue placeholder="Select blood group" />
                   </SelectTrigger>
                   <SelectContent>
@@ -343,8 +356,8 @@ const Register = () => {
 
           {/* Phone Number */}
           <div className="space-y-2">
-            <Label htmlFor="phone" className="flex items-center gap-2">
-              <PhoneIcon className="w-4 h-4" />
+            <Label htmlFor="phone" className="flex items-center gap-2 text-gray-700">
+              <PhoneIcon className="w-4 h-4 text-primary" />
               Phone Number
             </Label>
             <Input
@@ -354,6 +367,7 @@ const Register = () => {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
+              className="bg-gray-50 border-gray-200 h-11 focus:border-primary focus:ring-primary"
             />
           </div>
 
@@ -363,33 +377,34 @@ const Register = () => {
               id="terms"
               checked={agreeToTerms}
               onCheckedChange={(checked) => setAgreeToTerms(checked as boolean)}
+              className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
             />
-            <Label htmlFor="terms" className="text-sm font-normal cursor-pointer">
+            <Label htmlFor="terms" className="text-sm font-normal cursor-pointer text-gray-600 hover:text-gray-900">
               I agree to the{' '}
-              <Link href="#" className="text-ehr-blue-600 hover:text-ehr-blue-700">
+              <a href="#" className="text-primary hover:text-amber-600 hover:underline">
                 Terms and Conditions
-              </Link>{' '}
+              </a>{' '}
               and{' '}
-              <Link href="#" className="text-ehr-blue-600 hover:text-ehr-blue-700">
+              <a href="#" className="text-primary hover:text-amber-600 hover:underline">
                 Privacy Policy
-              </Link>
+              </a>
             </Label>
           </div>
 
           {/* Submit Button */}
-          <Button type="submit" className="w-full bg-ehr-blue-600 hover:bg-ehr-blue-700">
+          <Button type="submit" className="w-full h-11 text-base bg-primary hover:bg-amber-600 text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5">
             <UserPlusIcon className="w-4 h-4 mr-2" />
             Create Account
           </Button>
         </form>
 
         {/* Divider */}
-        <div className="relative my-6">
+        <div className="relative my-8">
           <div className="absolute inset-0 flex items-center">
-            <div className="w-full border-t border-gray-300" />
+            <div className="w-full border-t border-gray-200" />
           </div>
           <div className="relative flex justify-center text-sm">
-            <span className="px-2 bg-white text-gray-500">OR</span>
+            <span className="px-4 bg-white text-gray-500 font-medium">OR</span>
           </div>
         </div>
 
@@ -397,23 +412,23 @@ const Register = () => {
         <Button
           type="button"
           variant="outline"
-          className="w-full border-2"
+          className="w-full h-11 border-2 border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-700 font-medium"
           onClick={handleMetaMaskRegister}
         >
           <img
             src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg"
             alt="MetaMask"
-            className="w-5 h-5 mr-2"
+            className="w-5 h-5 mr-3"
           />
           Register with MetaMask
         </Button>
 
         {/* Login Link */}
-        <p className="mt-6 text-center text-sm text-gray-600">
+        <p className="mt-8 text-center text-sm text-gray-600">
           Already have an account?{' '}
           <Link
             to="/auth/login"
-            className="text-ehr-blue-600 hover:text-ehr-blue-700 font-medium"
+            className="text-primary hover:text-amber-600 font-semibold transition-colors"
           >
             Login here
           </Link>

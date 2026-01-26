@@ -76,60 +76,55 @@ const DoctorDashboard = () => {
     },
   ];
 
-  const getSectionTitle = () => {
-    const item = navItems.find((nav) => nav.section === activeSection);
-    return item?.label || 'Dashboard';
-  };
-
   // Dashboard Section
   const renderDashboard = () => (
     <div className="space-y-6">
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl hover:shadow-2xl hover:bg-white/90 dark:hover:bg-card/90 transition-all duration-300 hover:-translate-y-1">
           <CardContent className="flex items-center gap-4 pt-6">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <UsersIcon className="w-6 h-6 text-blue-600" />
+            <div className="p-3 bg-gradient-to-br from-blue-500/90 to-blue-600/90 rounded-xl shadow-lg">
+              <UsersIcon className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h3 className="text-3xl font-bold text-gray-900">{stats.authorizedPatients}</h3>
-              <p className="text-sm text-gray-500">Authorized Patients</p>
+              <h3 className="text-3xl font-bold text-foreground">{stats.authorizedPatients}</h3>
+              <p className="text-sm text-muted-foreground font-medium">Authorized Patients</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl hover:shadow-2xl hover:bg-white/90 dark:hover:bg-card/90 transition-all duration-300 hover:-translate-y-1">
           <CardContent className="flex items-center gap-4 pt-6">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <FileIcon className="w-6 h-6 text-green-600" />
+            <div className="p-3 bg-gradient-to-br from-green-500/90 to-green-600/90 rounded-xl shadow-lg">
+              <FileIcon className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h3 className="text-3xl font-bold text-gray-900">{stats.recordsAccessed}</h3>
-              <p className="text-sm text-gray-500">Records Accessed</p>
+              <h3 className="text-3xl font-bold text-foreground">{stats.recordsAccessed}</h3>
+              <p className="text-sm text-muted-foreground font-medium">Records Accessed</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl hover:shadow-2xl hover:bg-white/90 dark:hover:bg-card/90 transition-all duration-300 hover:-translate-y-1">
           <CardContent className="flex items-center gap-4 pt-6">
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <ClockIcon className="w-6 h-6 text-orange-600" />
+            <div className="p-3 bg-gradient-to-br from-amber-500/90 to-amber-600/90 rounded-xl shadow-lg">
+              <ClockIcon className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h3 className="text-3xl font-bold text-gray-900">{stats.pendingRequests}</h3>
-              <p className="text-sm text-gray-500">Pending Requests</p>
+              <h3 className="text-3xl font-bold text-foreground">{stats.pendingRequests}</h3>
+              <p className="text-sm text-muted-foreground font-medium">Pending Requests</p>
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl hover:shadow-2xl hover:bg-white/90 dark:hover:bg-card/90 transition-all duration-300 hover:-translate-y-1">
           <CardContent className="flex items-center gap-4 pt-6">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <ActivityIcon className="w-6 h-6 text-purple-600" />
+            <div className="p-3 bg-gradient-to-br from-purple-500/90 to-purple-600/90 rounded-xl shadow-lg">
+              <ActivityIcon className="w-7 h-7 text-white" />
             </div>
             <div>
-              <h3 className="text-3xl font-bold text-gray-900">{stats.recentActivity}</h3>
-              <p className="text-sm text-gray-500">Recent Activity</p>
+              <h3 className="text-3xl font-bold text-foreground">{stats.recentActivity}</h3>
+              <p className="text-sm text-muted-foreground font-medium">Recent Activity</p>
             </div>
           </CardContent>
         </Card>
@@ -137,21 +132,23 @@ const DoctorDashboard = () => {
 
       {/* Recent Activity & My Patients */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
+        <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl hover:shadow-2xl transition-all duration-300">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <ActivityIcon className="w-5 h-5" />
+              <ActivityIcon className="w-5 h-5 text-primary" />
               Recent Activity
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                  <FileIcon className="w-5 h-5 text-blue-600 mt-0.5" />
+                <div key={i} className="flex items-start gap-3 p-3 bg-white/50 dark:bg-muted/30 backdrop-blur-sm border border-white/40 dark:border-border/40 rounded-lg hover:bg-white/70 dark:hover:bg-muted/50 transition-all">
+                  <div className="p-2 bg-gradient-to-br from-blue-500/90 to-blue-600/90 rounded-lg shadow-sm">
+                    <FileIcon className="w-5 h-5 text-white" />
+                  </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium">Accessed patient record</p>
-                    <p className="text-xs text-gray-500">{i} hour{i > 1 ? 's' : ''} ago</p>
+                    <p className="text-xs text-muted-foreground">{i} hour{i > 1 ? 's' : ''} ago</p>
                   </div>
                 </div>
               ))}
@@ -159,17 +156,17 @@ const DoctorDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl hover:shadow-2xl transition-all duration-300">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <UsersIcon className="w-5 h-5" />
+              <UsersIcon className="w-5 h-5 text-primary" />
               My Patients
             </CardTitle>
             <Button
               variant="link"
               size="sm"
               onClick={() => setActiveSection('patients')}
-              className="text-ehr-blue-600"
+              className="text-primary hover:text-primary/80"
             >
               View All
             </Button>
@@ -177,19 +174,19 @@ const DoctorDashboard = () => {
           <CardContent>
             <div className="space-y-3">
               {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                <div key={i} className="flex items-center justify-between p-3 bg-white/50 dark:bg-muted/30 backdrop-blur-sm border border-white/40 dark:border-border/40 rounded-lg hover:bg-white/70 dark:hover:bg-muted/50 transition-all">
                   <div className="flex items-center gap-3">
                     <img
-                      src={`https://ui-avatars.com/api/?name=Patient+${i}&background=10b981&color=fff`}
+                      src={`https://ui-avatars.com/api/?name=Patient+${i}&background=f59e0b&color=000`}
                       alt={`Patient ${i}`}
-                      className="w-10 h-10 rounded-full"
+                      className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-700 shadow-lg"
                     />
                     <div>
                       <p className="font-medium text-sm">Patient Name {i}</p>
-                      <p className="text-xs text-gray-500">Last visit: Jan {i}, 2026</p>
+                      <p className="text-xs text-muted-foreground">Last visit: Jan {i}, 2026</p>
                     </div>
                   </div>
-                  <Button size="sm" variant="outline">
+                  <Button size="sm" variant="outline" className="hover:bg-white/60 dark:hover:bg-muted/40">
                     <EyeIcon className="w-4 h-4 mr-1" />
                     View
                   </Button>
@@ -204,14 +201,14 @@ const DoctorDashboard = () => {
 
   // Profile Section
   const renderProfile = () => (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+    <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl">
+      <CardHeader className="flex flex-row items-center justify-between border-b-2 border-white/30 dark:border-border/30">
         <CardTitle className="flex items-center gap-2">
-          <UserIcon className="w-5 h-5" />
+          <UserIcon className="w-5 h-5 text-primary" />
           My Profile
         </CardTitle>
         {!isEditingProfile && (
-          <Button onClick={() => setIsEditingProfile(true)}>
+          <Button onClick={() => setIsEditingProfile(true)} className="bg-gradient-to-r from-primary to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg">
             <EditIcon className="w-4 h-4 mr-2" />
             Edit Profile
           </Button>
@@ -222,11 +219,11 @@ const DoctorDashboard = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="fullName">Full Name</Label>
-              <Input id="fullName" defaultValue="Dr. Sarah Smith" disabled={!isEditingProfile} />
+              <Input id="fullName" defaultValue="Dr. Sarah Smith" disabled={!isEditingProfile} className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" defaultValue="doctor@test.com" disabled={!isEditingProfile} />
+              <Input id="email" type="email" defaultValue="doctor@test.com" disabled={!isEditingProfile} className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40" />
             </div>
           </div>
 
@@ -237,7 +234,7 @@ const DoctorDashboard = () => {
                 Specialty
               </Label>
               <Select disabled={!isEditingProfile}>
-                <SelectTrigger>
+                <SelectTrigger className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40">
                   <SelectValue placeholder="Cardiologist" />
                 </SelectTrigger>
                 <SelectContent>
@@ -254,33 +251,33 @@ const DoctorDashboard = () => {
                 <IdCardIcon className="w-4 h-4" />
                 Medical License Number
               </Label>
-              <Input id="licenseNumber" defaultValue="MD-123456" disabled={!isEditingProfile} />
+              <Input id="licenseNumber" defaultValue="MD-123456" disabled={!isEditingProfile} className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40" />
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" type="tel" defaultValue="+1234567890" disabled={!isEditingProfile} />
+              <Input id="phone" type="tel" defaultValue="+1234567890" disabled={!isEditingProfile} className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="hospital">Hospital / Clinic</Label>
-              <Input id="hospital" defaultValue="City General Hospital" disabled={!isEditingProfile} />
+              <Input id="hospital" defaultValue="City General Hospital" disabled={!isEditingProfile} className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40" />
             </div>
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="address">Address</Label>
-            <Textarea id="address" rows={3} defaultValue="456 Medical Center, City, State, ZIP" disabled={!isEditingProfile} />
+            <Textarea id="address" rows={3} defaultValue="456 Medical Center, City, State, ZIP" disabled={!isEditingProfile} className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40" />
           </div>
 
           {isEditingProfile && (
             <div className="flex gap-3">
-              <Button type="button" onClick={() => setIsEditingProfile(false)}>
+              <Button type="button" onClick={() => setIsEditingProfile(false)} className="bg-gradient-to-r from-primary to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg">
                 <SaveIcon className="w-4 h-4 mr-2" />
                 Save Changes
               </Button>
-              <Button type="button" variant="secondary" onClick={() => setIsEditingProfile(false)}>
+              <Button type="button" variant="outline" onClick={() => setIsEditingProfile(false)}>
                 <XIcon className="w-4 h-4 mr-2" />
                 Cancel
               </Button>
@@ -293,30 +290,30 @@ const DoctorDashboard = () => {
 
   // My Patients Section
   const renderPatients = () => (
-    <Card>
+    <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <UsersIcon className="w-5 h-5" />
+          <UsersIcon className="w-5 h-5 text-primary" />
           My Patients
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+            <div key={i} className="p-4 bg-white/60 dark:bg-card/60 backdrop-blur-sm border-2 border-white/40 dark:border-border/40 rounded-lg hover:shadow-md hover:border-primary/50 transition-all">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4">
                   <img
-                    src={`https://ui-avatars.com/api/?name=Patient+${i}&background=10b981&color=fff`}
+                    src={`https://ui-avatars.com/api/?name=Patient+${i}&background=f59e0b&color=000`}
                     alt={`Patient ${i}`}
-                    className="w-12 h-12 rounded-full"
+                    className="w-12 h-12 rounded-full border-2 border-white dark:border-gray-700 shadow-lg"
                   />
                   <div>
-                    <h3 className="font-semibold text-gray-900">Patient Name {i}</h3>
-                    <p className="text-sm text-gray-500">Last accessed: Jan {i}, 2026</p>
+                    <h3 className="font-semibold text-foreground">Patient Name {i}</h3>
+                    <p className="text-sm text-muted-foreground">Last accessed: Jan {i}, 2026</p>
                   </div>
                 </div>
-                <Button size="sm" onClick={() => setActiveSection('records')}>
+                <Button size="sm" onClick={() => setActiveSection('records')} className="bg-gradient-to-r from-primary to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg">
                   <FileTextIcon className="w-4 h-4 mr-2" />
                   View Records
                 </Button>
@@ -330,10 +327,10 @@ const DoctorDashboard = () => {
 
   // Request Access Section
   const renderRequest = () => (
-    <Card>
+    <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <UserPlusIcon className="w-5 h-5" />
+          <UserPlusIcon className="w-5 h-5 text-primary" />
           Request Patient Access
         </CardTitle>
       </CardHeader>
@@ -342,13 +339,13 @@ const DoctorDashboard = () => {
           <div className="space-y-2">
             <Label htmlFor="patientSearch">Search Patient</Label>
             <div className="relative">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 id="patientSearch"
                 placeholder="Enter patient email or wallet address"
                 value={searchPatient}
                 onChange={(e) => setSearchPatient(e.target.value)}
-                className="pl-10"
+                className="pl-10 bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40"
               />
             </div>
           </div>
@@ -359,13 +356,14 @@ const DoctorDashboard = () => {
               id="requestReason"
               rows={4}
               placeholder="Explain why you need access to this patient's records..."
+              className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40"
             />
           </div>
 
           <div className="space-y-2">
             <Label htmlFor="accessDuration">Access Duration</Label>
             <Select>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40">
                 <SelectValue placeholder="Select duration" />
               </SelectTrigger>
               <SelectContent>
@@ -378,7 +376,7 @@ const DoctorDashboard = () => {
             </Select>
           </div>
 
-          <Button type="submit">
+          <Button type="submit" className="bg-gradient-to-r from-primary to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg">
             <UserPlusIcon className="w-4 h-4 mr-2" />
             Send Access Request
           </Button>
@@ -386,16 +384,16 @@ const DoctorDashboard = () => {
 
         {/* Pending Requests */}
         <div className="mt-8">
-          <h3 className="font-semibold text-gray-900 mb-4">Pending Requests</h3>
+          <h3 className="font-semibold text-foreground mb-4">Pending Requests</h3>
           <div className="space-y-3">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="p-3 bg-gray-50 rounded-lg">
+              <div key={i} className="p-3 bg-white/50 dark:bg-muted/30 backdrop-blur-sm border border-white/40 dark:border-border/40 rounded-lg">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium">Request to Patient {i}</p>
-                    <p className="text-xs text-gray-500">Sent {i} day{i > 1 ? 's' : ''} ago</p>
+                    <p className="text-xs text-muted-foreground">Sent {i} day{i > 1 ? 's' : ''} ago</p>
                   </div>
-                  <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full">
+                  <span className="text-xs px-2 py-1 bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 rounded-full border border-amber-200 dark:border-amber-800">
                     Pending
                   </span>
                 </div>
@@ -409,10 +407,10 @@ const DoctorDashboard = () => {
 
   // Patient Records Section
   const renderRecords = () => (
-    <Card>
+    <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <FileTextIcon className="w-5 h-5" />
+          <FileTextIcon className="w-5 h-5 text-primary" />
           Patient Records
         </CardTitle>
       </CardHeader>
@@ -421,7 +419,7 @@ const DoctorDashboard = () => {
         <div className="mb-6">
           <Label htmlFor="selectPatient">Select Patient</Label>
           <Select>
-            <SelectTrigger>
+            <SelectTrigger className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40">
               <SelectValue placeholder="Choose a patient" />
             </SelectTrigger>
             <SelectContent>
@@ -437,18 +435,18 @@ const DoctorDashboard = () => {
         {/* Records Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
+            <div key={i} className="p-4 bg-white/60 dark:bg-card/60 backdrop-blur-sm border-2 border-white/40 dark:border-border/40 rounded-lg hover:shadow-md hover:border-primary/50 transition-all">
               <div className="flex items-start justify-between mb-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <FileIcon className="w-5 h-5 text-blue-600" />
+                <div className="p-2 bg-gradient-to-br from-blue-500/90 to-blue-600/90 rounded-lg shadow-sm">
+                  <FileIcon className="w-5 h-5 text-white" />
                 </div>
-                <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
+                <span className="text-xs px-2 py-1 bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 rounded-full border border-green-200 dark:border-green-800">
                   Lab Results
                 </span>
               </div>
-              <h3 className="font-semibold text-gray-900 mb-1">Medical Record {i}</h3>
-              <p className="text-xs text-gray-500 mb-3">Uploaded on Jan {10 + i}, 2026</p>
-              <Button size="sm" variant="outline" className="w-full">
+              <h3 className="font-semibold text-foreground mb-1">Medical Record {i}</h3>
+              <p className="text-xs text-muted-foreground mb-3">Uploaded on Jan {10 + i}, 2026</p>
+              <Button size="sm" variant="outline" className="w-full hover:bg-white/60 dark:hover:bg-muted/40">
                 <EyeIcon className="w-4 h-4 mr-2" />
                 View Record
               </Button>
@@ -483,7 +481,6 @@ const DoctorDashboard = () => {
       navItems={navItems}
       activeSection={activeSection}
       onSectionChange={setActiveSection}
-      pageTitle={getSectionTitle()}
     >
       {renderContent()}
     </DashboardLayout>

@@ -1,6 +1,6 @@
 import { DashboardLayout } from "../_root"
 import Dashboard from "@/app/(dashboard)/Dashboard"
-import PatientDashboard from "@/app/(dashboard)/patient/PatientDashboard"
+import PatientDashboard from "@/app/(dashboard)/patient/PatientDashboard.tsx"
 import DoctorDashboard from "@/app/(dashboard)/doctor/DoctorDashboard"
 import StaffDashboard from "@/app/(dashboard)/staff/StaffDashboard"
 import { createRoute } from "@tanstack/react-router"

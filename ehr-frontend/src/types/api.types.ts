@@ -27,6 +27,11 @@ export interface RegisterRequest {
   gender: 'MALE' | 'FEMALE' | 'OTHER';
   dateOfBirth: string;
   phoneNumber?: string;
+  specialty?: string;
+  licenseNumber?: string;
+  department?: string;
+  employeeId?: string;
+  bloodGroup?: string;
 }
 
 export interface AuthResponse {

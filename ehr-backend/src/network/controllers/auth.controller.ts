@@ -46,7 +46,15 @@ class AuthController extends Api {
             })
 
             const data = {
-                token: encryptToken
+                accessToken: encryptToken,
+                user: {
+                    id: user.id,
+                    fullName: user.fullName,
+                    email: user.email,
+                    role: user.role,
+                    createdAt: user.createdAt,
+                    updatedAt: user.updatedAt
+                }
             }
 
             this.success(res, data, "Login Route")
@@ -57,7 +65,11 @@ class AuthController extends Api {
 
     public async register(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const { fullName, email, password, role, gender, dateOfBirth } = req.body;
+            const {
+                fullName, email, password, role,
+                gender, dateOfBirth, phoneNumber,
+                specialty, licenseNumber, department, employeeId, bloodGroup
+            } = req.body;
 
             // Validation
             if (!fullName || !email || !password || !role) {
@@ -108,14 +120,21 @@ class AuthController extends Api {
                     await tx.doctorProfile.create({
                         data: {
                             userId: newUser.id,
-                            designation: 'Not Specified'
+                            designation: 'Doctor',
+                            specialization: specialty || 'General',
+                            licenseNumber: licenseNumber,
+                            phoneNumber: phoneNumber,
+                            // If doctor has department, add it here too if needed, but UI only asks for specialty
                         }
                     });
                 } else if (role === 'STAFF') {
                     await tx.staffProfile.create({
                         data: {
                             userId: newUser.id,
-                            designation: 'Not Specified'
+                            designation: 'Staff',
+                            department: department || 'General',
+                            employeeId: employeeId,
+                            phoneNumber: phoneNumber
                         }
                     });
                 } else if (role === 'PATIENT') {
@@ -124,7 +143,8 @@ class AuthController extends Api {
                             userId: newUser.id,
                             dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : new Date(),
                             gender: gender || 'OTHER',
-                            bloodGroup: 'UNKNOWN'
+                            bloodGroup: bloodGroup || 'UNKNOWN',
+                            phoneNumber: phoneNumber
                         }
                     });
                 }

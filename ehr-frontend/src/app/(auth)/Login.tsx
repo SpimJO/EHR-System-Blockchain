@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -22,20 +22,58 @@ import {
   MailIcon,
   UserIcon,
 } from 'lucide-react';
+import Cookies from 'js-cookie';
+import { authService } from '@/services/api/auth.service';
 
 const Login = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
+  // Role is not strictly needed for login API but kept for UI consistency/future use
+  // We will default to empty or just ignore it for the API call
   const [userRole, setUserRole] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Placeholder - functionality to be added later
-    setSuccess('Login functionality will be connected soon!');
+    setError('');
+    setSuccess('');
+    setIsLoading(true);
+
+    try {
+      const response = await authService.login({ email, password });
+
+      if (response.data) {
+        const { accessToken, user } = response.data;
+
+        // Save token to cookie
+        Cookies.set(import.meta.env.VITE_TOKEN_NAME || 'ehr_token', accessToken, {
+          expires: rememberMe ? 7 : 1, // 7 days if remember me, else 1 day
+          secure: true,
+          sameSite: 'strict'
+        });
+
+        // Save user to local storage
+        localStorage.setItem('ehr_user', JSON.stringify(user));
+
+        setSuccess('Login successful! Redirecting...');
+
+        // Redirect based on role or to main dashboard
+        // Assuming /dashboard routes handle role-based redirection or display
+        setTimeout(() => {
+          navigate({ to: '/dashboard' });
+        }, 1000);
+      }
+    } catch (err: any) {
+      console.error(err);
+      setError(err.response?.data?.message || 'Invalid email or password');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleMetaMaskLogin = () => {
@@ -203,9 +241,13 @@ const Login = () => {
                 </div>
 
                 {/* Submit Button */}
-                <Button type="submit" className="w-full h-11 text-base bg-primary hover:bg-amber-600 text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5">
-                  <MailIcon className="w-4 h-4 mr-2" />
-                  Login
+                <Button type="submit" disabled={isLoading} className="w-full h-11 text-base bg-primary hover:bg-amber-600 text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5">
+                  {isLoading ? 'Logging in...' : (
+                    <>
+                      <MailIcon className="w-4 h-4 mr-2" />
+                      Login
+                    </>
+                  )}
                 </Button>
               </form>
 

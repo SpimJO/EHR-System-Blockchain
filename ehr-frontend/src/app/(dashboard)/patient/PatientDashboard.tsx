@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import {
   Select,
   SelectContent,
@@ -12,6 +13,15 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import {
   HomeIcon,
   UserIcon,
@@ -27,7 +37,6 @@ import {
   EditIcon,
   SaveIcon,
   XIcon,
-  LockIcon,
   CloudUploadIcon,
   CheckCircle2Icon,
   XCircleIcon,
@@ -36,132 +45,94 @@ import {
   DownloadIcon,
   CalendarIcon,
   ShieldCheckIcon,
+  SearchIcon,
+  FilterIcon,
+  LockIcon,
+  UsersIcon,
+  FileCheckIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
-import {
-  getCurrentUser,
-  getRecordsByPatient,
-  getRequestsByPatient,
-  getPermissionsByPatient,
-  getAuditLogsByUser,
-  getPendingRequestsCount,
-  getActivePermissionsCount,
-  type AccessRequest,
-  type Permission,
-} from '@/lib/data/mockData';
 
 const PatientDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterType, setFilterType] = useState('all');
 
-  // Get current patient data
-  const currentUser = getCurrentUser('patient');
-  const medicalRecords = getRecordsByPatient(currentUser.id);
-  const accessRequests = getRequestsByPatient(currentUser.id);
-  const permissions = getPermissionsByPatient(currentUser.id);
-  const auditLogs = getAuditLogsByUser(currentUser.id);
-
-  // Stats
-  const stats = {
-    totalRecords: medicalRecords.length,
-    authorizedUsers: getActivePermissionsCount(currentUser.id),
-    pendingRequests: getPendingRequestsCount(currentUser.id),
-    recentActivity: auditLogs.length,
+  // Mock user data - In production, fetched from /profile endpoint
+  const currentUser = {
+    id: '1',
+    fullName: 'John Doe',
+    email: 'patient@test.com',
+    phone: '+1234567890',
+    dateOfBirth: '1990-01-15',
+    gender: 'male',
+    bloodGroup: 'O+',
+    address: '123 Main St, City, State 12345',
+    blockchainAddress: '0x1234...5678',
   };
 
+  // Stats - From /dashboard/patient endpoint
+  const stats = {
+    totalRecords: 24,
+    authorizedUsers: 5,
+    pendingRequests: 3,
+    recentActivity: 12,
+    recordsThisMonth: 8,
+  };
+
+  // Navigation items
   const navItems = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      icon: <HomeIcon className="w-5 h-5" />,
-      section: 'dashboard',
-    },
-    {
-      id: 'profile',
-      label: 'My Profile',
-      icon: <UserIcon className="w-5 h-5" />,
-      section: 'profile',
-    },
-    {
-      id: 'records',
-      label: 'Medical Records',
-      icon: <FileTextIcon className="w-5 h-5" />,
-      section: 'records',
-    },
-    {
-      id: 'upload',
-      label: 'Upload Record',
-      icon: <UploadIcon className="w-5 h-5" />,
-      section: 'upload',
-    },
-    {
-      id: 'requests',
-      label: 'Access Requests',
-      icon: <BellIcon className="w-5 h-5" />,
-      badge: stats.pendingRequests,
-      section: 'requests',
-    },
-    {
-      id: 'permissions',
-      label: 'Permissions',
-      icon: <KeyIcon className="w-5 h-5" />,
-      section: 'permissions',
-    },
-    {
-      id: 'audit',
-      label: 'Audit Log',
-      icon: <HistoryIcon className="w-5 h-5" />,
-      section: 'audit',
-    },
+    { id: 'dashboard', label: 'Dashboard', icon: <HomeIcon className="w-5 h-5" />, section: 'dashboard' },
+    { id: 'profile', label: 'My Profile', icon: <UserIcon className="w-5 h-5" />, section: 'profile' },
+    { id: 'records', label: 'Medical Records', icon: <FileTextIcon className="w-5 h-5" />, section: 'records' },
+    { id: 'upload', label: 'Upload Record', icon: <UploadIcon className="w-5 h-5" />, section: 'upload' },
+    { id: 'access', label: 'Access Requests', icon: <BellIcon className="w-5 h-5" />, badge: stats.pendingRequests, section: 'access' },
+    { id: 'permissions', label: 'Permissions', icon: <KeyIcon className="w-5 h-5" />, section: 'permissions' },
+    { id: 'audit', label: 'Audit Log', icon: <HistoryIcon className="w-5 h-5" />, section: 'audit' },
   ];
 
-  const getSectionTitle = () => {
-    const item = navItems.find((nav) => nav.section === activeSection);
-    return item?.label || 'Dashboard';
-  };
+  // Mock data - In production from respective API endpoints
+  const medicalRecords = [
+    { id: '1', title: 'Blood Test Results', type: 'lab', description: 'Complete Blood Count (CBC)', uploadedAt: '2026-01-20T10:30:00Z', uploadedBy: 'Dr. Sarah Smith', fileSize: '245 KB', encrypted: true, hash: '0xabc...def' },
+    { id: '2', title: 'X-Ray - Chest', type: 'imaging', description: 'Chest X-ray examination', uploadedAt: '2026-01-18T14:15:00Z', uploadedBy: 'Dr. Michael Johnson', fileSize: '1.2 MB', encrypted: true, hash: '0x123...456' },
+    { id: '3', title: 'Prescription - Antibiotics', type: 'prescription', description: 'Amoxicillin 500mg', uploadedAt: '2026-01-15T09:00:00Z', uploadedBy: 'Dr. Sarah Smith', fileSize: '156 KB', encrypted: true, hash: '0x789...abc' },
+  ];
 
-  const getRecordTypeColor = (type: string) => {
-    const colors = {
-      lab: 'bg-blue-100 text-blue-700 border-blue-200',
-      prescription: 'bg-green-100 text-green-700 border-green-200',
-      imaging: 'bg-purple-100 text-purple-700 border-purple-200',
-      diagnosis: 'bg-orange-100 text-orange-700 border-orange-200',
-      other: 'bg-gray-100 text-gray-700 border-gray-200',
+  const accessRequests = [
+    { id: '1', requesterName: 'Dr. Sarah Smith', requesterSpecialty: 'Cardiologist', requesterAddress: '0x5678...9ABC', reason: 'Follow-up consultation for cardiac evaluation', duration: '30 days', requestedAt: '2026-01-24T08:00:00Z', status: 'pending' },
+    { id: '2', requesterName: 'Dr. Michael Johnson', requesterSpecialty: 'Radiologist', requesterAddress: '0xDEF0...1234', reason: 'Review imaging results', duration: '7 days', requestedAt: '2026-01-23T14:30:00Z', status: 'pending' },
+    { id: '3', requesterName: 'Dr. Emily Chen', requesterSpecialty: 'General Physician', requesterAddress: '0x9876...5432', reason: 'Annual checkup', duration: '14 days', requestedAt: '2026-01-20T10:00:00Z', status: 'approved' },
+  ];
+
+  const permissions = [
+    { id: '1', userName: 'Dr. Sarah Smith', userRole: 'Doctor', userAddress: '0x5678...9ABC', grantedAt: '2026-01-15T10:00:00Z', expiresAt: '2026-02-15T10:00:00Z', status: 'active', accessCount: 12 },
+    { id: '2', userName: 'Nurse Jane Doe', userRole: 'Staff', userAddress: '0xABCD...EF12', grantedAt: '2026-01-10T09:00:00Z', expiresAt: '2026-02-10T09:00:00Z', status: 'active', accessCount: 5 },
+  ];
+
+  const auditLogs = [
+    { id: '1', action: 'Record Uploaded', type: 'upload', performedBy: 'You', timestamp: '2026-01-20T10:30:00Z', details: 'Blood Test Results uploaded', txHash: '0xabc...def' },
+    { id: '2', action: 'Access Granted', type: 'permission', performedBy: 'You', timestamp: '2026-01-15T10:00:00Z', details: 'Granted to Dr. Sarah Smith', txHash: '0x123...456' },
+    { id: '3', action: 'Record Accessed', type: 'access', performedBy: 'Dr. Sarah Smith', timestamp: '2026-01-16T14:20:00Z', details: 'Viewed Blood Test Results', txHash: '0x789...abc' },
+  ];
+
+  const getBreadcrumbs = () => {
+    const sectionBreadcrumbs: Record<string, Array<{ label: string; href?: string }>> = {
+      dashboard: [],
+      profile: [{ label: 'My Profile' }],
+      records: [{ label: 'Medical Records' }],
+      upload: [{ label: 'Medical Records', href: 'records' }, { label: 'Upload' }],
+      access: [{ label: 'Access Requests' }],
+      permissions: [{ label: 'Permissions' }],
+      audit: [{ label: 'Audit Log' }],
     };
-    return colors[type as keyof typeof colors] || colors.other;
+    return sectionBreadcrumbs[activeSection] || [];
   };
 
-  const getStatusColor = (status: string) => {
-    const colors = {
-      pending: 'bg-orange-100 text-orange-700 border-orange-200',
-      approved: 'bg-green-100 text-green-700 border-green-200',
-      denied: 'bg-red-100 text-red-700 border-red-200',
-      active: 'bg-green-100 text-green-700 border-green-200',
-      expired: 'bg-gray-100 text-gray-700 border-gray-200',
-      revoked: 'bg-red-100 text-red-700 border-red-200',
-    };
-    return colors[status as keyof typeof colors] || colors.pending;
-  };
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-    });
-  };
-
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
-  };
-
+  const formatDate = (dateString: string) => new Date(dateString).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  const formatDateTime = (dateString: string) => new Date(dateString).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+  
   const getRelativeTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -169,114 +140,86 @@ const PatientDashboard = () => {
     const diffMins = Math.floor(diffMs / 60000);
     const diffHours = Math.floor(diffMins / 60);
     const diffDays = Math.floor(diffHours / 24);
-
-    if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+    if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
     if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
     if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
     return formatDate(dateString);
   };
 
-  const handleApproveRequest = (request: AccessRequest) => {
-    toast.success(`Approved access request from ${request.requesterName}`);
+  const getRecordTypeBadge = (type: string) => {
+    const config: Record<string, { label: string; className: string }> = {
+      lab: { label: 'Lab Results', className: 'bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800' },
+      prescription: { label: 'Prescription', className: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800' },
+      imaging: { label: 'Imaging', className: 'bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800' },
+      diagnosis: { label: 'Diagnosis', className: 'bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-400 border-orange-200 dark:border-orange-800' },
+    };
+    const { label, className } = config[type] || { label: 'Other', className: 'bg-gray-100 dark:bg-gray-900/40 text-gray-700 dark:text-gray-400 border-gray-200 dark:border-gray-800' };
+    return <Badge className={cn('border', className)}>{label}</Badge>;
   };
 
-  const handleDenyRequest = (request: AccessRequest) => {
-    toast.error(`Denied access request from ${request.requesterName}`);
-  };
-
-  const handleRevokePermission = (permission: Permission) => {
-    toast.info(`Revoked access permission for ${permission.userName}`);
+  const getStatusBadge = (status: string) => {
+    const config: Record<string, { label: string; className: string }> = {
+      pending: { label: 'Pending', className: 'bg-amber-100 dark:bg-amber-900/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800' },
+      approved: { label: 'Approved', className: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800' },
+      denied: { label: 'Denied', className: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800' },
+      active: { label: 'Active', className: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800' },
+      expired: { label: 'Expired', className: 'bg-gray-100 dark:bg-gray-900/40 text-gray-700 dark:text-gray-400 border-gray-200 dark:border-gray-800' },
+      revoked: { label: 'Revoked', className: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800' },
+    };
+    const { label, className } = config[status] || config.pending;
+    return <Badge className={cn('border', className)}>{label}</Badge>;
   };
 
   // Dashboard Section
   const renderDashboard = () => (
     <div className="space-y-6">
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card className="border-l-4 border-l-blue-500">
-          <CardContent className="flex items-center gap-4 pt-6">
-            <div className="p-3 bg-blue-100 rounded-xl">
-              <FileIcon className="w-7 h-7 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="text-3xl font-bold text-gray-900">{stats.totalRecords}</h3>
-              <p className="text-sm text-gray-500 font-medium">Total Records</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-green-500">
-          <CardContent className="flex items-center gap-4 pt-6">
-            <div className="p-3 bg-green-100 rounded-xl">
-              <UserCheckIcon className="w-7 h-7 text-green-600" />
-            </div>
-            <div>
-              <h3 className="text-3xl font-bold text-gray-900">{stats.authorizedUsers}</h3>
-              <p className="text-sm text-gray-500 font-medium">Authorized Users</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-orange-500">
-          <CardContent className="flex items-center gap-4 pt-6">
-            <div className="p-3 bg-orange-100 rounded-xl">
-              <ClockIcon className="w-7 h-7 text-orange-600" />
-            </div>
-            <div>
-              <h3 className="text-3xl font-bold text-gray-900">{stats.pendingRequests}</h3>
-              <p className="text-sm text-gray-500 font-medium">Pending Requests</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="border-l-4 border-l-purple-500">
-          <CardContent className="flex items-center gap-4 pt-6">
-            <div className="p-3 bg-purple-100 rounded-xl">
-              <HistoryIcon className="w-7 h-7 text-purple-600" />
-            </div>
-            <div>
-              <h3 className="text-3xl font-bold text-gray-900">{stats.recentActivity}</h3>
-              <p className="text-sm text-gray-500 font-medium">Recent Activities</p>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { label: 'Total Records', value: stats.totalRecords, subtext: `+${stats.recordsThisMonth} this month`, icon: FileIcon, gradient: 'from-blue-500/90 to-blue-600/90' },
+          { label: 'Authorized Users', value: stats.authorizedUsers, subtext: 'Active permissions', icon: UserCheckIcon, gradient: 'from-green-500/90 to-green-600/90' },
+          { label: 'Pending Requests', value: stats.pendingRequests, subtext: 'Awaiting review', icon: ClockIcon, gradient: 'from-amber-500/90 to-amber-600/90' },
+          { label: 'Recent Activity', value: stats.recentActivity, subtext: 'Last 30 days', icon: ActivityIcon, gradient: 'from-purple-500/90 to-purple-600/90' },
+        ].map((stat, i) => (
+          <Card key={i} className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-1">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">{stat.label}</p>
+                  <h3 className="text-3xl font-bold text-foreground mt-2">{stat.value}</h3>
+                  <p className="text-xs text-muted-foreground mt-1">{stat.subtext}</p>
+                </div>
+                <div className={cn('p-3 bg-gradient-to-br rounded-xl shadow-lg', stat.gradient)}>
+                  <stat.icon className="w-7 h-7 text-white" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Recent Activity & Access Requests */}
+      {/* Activity and Requests */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <ActivityIcon className="w-5 h-5 text-gray-600" />
-              Recent Activity
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setActiveSection('audit')}
-              className="text-ehr-blue-600 hover:text-ehr-blue-700"
-            >
-              View All →
-            </Button>
+        <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-white/30 dark:border-border/30">
+            <div>
+              <CardTitle className="flex items-center gap-2"><ActivityIcon className="w-5 h-5 text-primary" />Recent Activity</CardTitle>
+              <CardDescription>Latest actions on your records</CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setActiveSection('audit')} className="text-primary">View All →</Button>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="space-y-3">
-              {auditLogs.slice(0, 4).map((log) => (
-                <div key={log.id} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors">
-                  <div className={cn('p-2 rounded-lg', 
-                    log.type === 'upload' ? 'bg-blue-100' :
-                    log.type === 'access' ? 'bg-green-100' :
-                    log.type === 'permission' ? 'bg-purple-100' :
-                    'bg-orange-100'
-                  )}>
-                    {log.type === 'upload' && <UploadIcon className="w-4 h-4 text-blue-600" />}
-                    {log.type === 'access' && <EyeIcon className="w-4 h-4 text-green-600" />}
-                    {log.type === 'permission' && <KeyIcon className="w-4 h-4 text-purple-600" />}
-                    {log.type === 'request' && <BellIcon className="w-4 h-4 text-orange-600" />}
+              {auditLogs.slice(0, 5).map((log) => (
+                <div key={log.id} className="flex items-start gap-3 p-3 bg-white/50 dark:bg-muted/30 backdrop-blur-sm border border-white/40 dark:border-border/40 rounded-lg hover:bg-white/70 dark:hover:bg-muted/50 transition-all">
+                  <div className={cn('p-2 rounded-lg shadow-sm', log.type === 'upload' && 'bg-gradient-to-br from-blue-500/90 to-blue-600/90', log.type === 'access' && 'bg-gradient-to-br from-green-500/90 to-green-600/90', log.type === 'permission' && 'bg-gradient-to-br from-purple-500/90 to-purple-600/90')}>
+                    {log.type === 'upload' && <UploadIcon className="w-4 h-4 text-white" />}
+                    {log.type === 'access' && <EyeIcon className="w-4 h-4 text-white" />}
+                    {log.type === 'permission' && <KeyIcon className="w-4 h-4 text-white" />}
                   </div>
-                  <div className="flex-1">
-                    <p className="text-sm font-medium text-gray-900">{log.action}</p>
-                    <p className="text-xs text-gray-500">{getRelativeTime(log.timestamp)}</p>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-foreground truncate">{log.action}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">{log.performedBy} • {getRelativeTime(log.timestamp)}</p>
                   </div>
                 </div>
               ))}
@@ -284,360 +227,313 @@ const PatientDashboard = () => {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <BellIcon className="w-5 h-5 text-gray-600" />
-              Access Requests
-              {stats.pendingRequests > 0 && (
-                <span className="ml-2 px-2 py-0.5 bg-red-100 text-red-700 text-xs font-semibold rounded-full">
-                  {stats.pendingRequests}
-                </span>
-              )}
-            </CardTitle>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setActiveSection('requests')}
-              className="text-ehr-blue-600 hover:text-ehr-blue-700"
-            >
-              View All →
-            </Button>
+        <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl">
+          <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-white/30 dark:border-border/30">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <BellIcon className="w-5 h-5 text-primary" />Access Requests
+                {stats.pendingRequests > 0 && <Badge className="ml-2 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800">{stats.pendingRequests}</Badge>}
+              </CardTitle>
+              <CardDescription>Review pending requests</CardDescription>
+            </div>
+            <Button variant="ghost" size="sm" onClick={() => setActiveSection('access')} className="text-primary">View All →</Button>
           </CardHeader>
-          <CardContent>
+          <CardContent className="pt-6">
             <div className="space-y-3">
-              {accessRequests
-                .filter((req) => req.status === 'pending')
-                .slice(0, 2)
-                .map((request) => (
-                  <div key={request.id} className="p-4 border-2 border-gray-200 rounded-xl hover:border-ehr-blue-300 transition-colors">
-                    <div className="flex items-start gap-3 mb-3">
-                      <img
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(request.requesterName)}&background=2563eb&color=fff`}
-                        alt={request.requesterName}
-                        className="w-12 h-12 rounded-full border-2 border-white shadow-sm"
-                      />
-                      <div className="flex-1">
-                        <p className="font-semibold text-gray-900">{request.requesterName}</p>
-                        <p className="text-sm text-gray-500">
-                          {request.requesterSpecialty || request.requesterDepartment}
-                        </p>
-                      </div>
-                      <span className={cn('px-2 py-1 text-xs font-semibold rounded-full border', getStatusColor(request.status))}>
-                        {request.status}
-                      </span>
+              {accessRequests.filter(r => r.status === 'pending').slice(0, 2).map((req) => (
+                <div key={req.id} className="p-4 bg-white/60 dark:bg-card/60 backdrop-blur-sm border-2 border-white/40 dark:border-border/40 rounded-xl hover:border-primary/50 transition-all shadow-md">
+                  <div className="flex items-start gap-3 mb-3">
+                    <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(req.requesterName)}&background=f59e0b&color=000`} alt={req.requesterName} className="w-12 h-12 rounded-full border-2 border-white dark:border-gray-700 shadow-lg" />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-foreground truncate">{req.requesterName}</p>
+                      <p className="text-sm text-muted-foreground">{req.requesterSpecialty}</p>
                     </div>
-                    <p className="text-sm text-gray-600 mb-3">{request.reason}</p>
-                    <div className="flex items-center gap-2 text-xs text-gray-500 mb-3">
-                      <CalendarIcon className="w-3 h-3" />
-                      <span>Duration: {request.duration}</span>
-                      <span className="mx-2">•</span>
-                      <span>{getRelativeTime(request.requestedAt)}</span>
-                    </div>
-                    <div className="flex gap-2">
-                      <Button
-                        size="sm"
-                        className="flex-1 bg-green-600 hover:bg-green-700"
-                        onClick={() => handleApproveRequest(request)}
-                      >
-                        <CheckCircle2Icon className="w-4 h-4 mr-1" />
-                        Approve
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="flex-1 hover:bg-red-50 hover:text-red-600 hover:border-red-300"
-                        onClick={() => handleDenyRequest(request)}
-                      >
-                        <XCircleIcon className="w-4 h-4 mr-1" />
-                        Deny
-                      </Button>
-                    </div>
+                    {getStatusBadge(req.status)}
                   </div>
-                ))}
-              {accessRequests.filter((req) => req.status === 'pending').length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <BellIcon className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                  <p className="text-sm">No pending requests</p>
+                  <p className="text-sm text-foreground/80 mb-3">{req.reason}</p>
+                  <div className="flex gap-2">
+                    <Button size="sm" className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg" onClick={() => toast.success(`Approved ${req.requesterName}`)}>
+                      <CheckCircle2Icon className="w-4 h-4 mr-1" />Approve
+                    </Button>
+                    <Button size="sm" variant="outline" className="flex-1 hover:bg-red-50 dark:hover:bg-red-950/50 hover:text-red-600" onClick={() => toast.error(`Denied ${req.requesterName}`)}>
+                      <XCircleIcon className="w-4 h-4 mr-1" />Deny
+                    </Button>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Quick Actions */}
+      <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl">
+        <CardHeader className="border-b border-white/30 dark:border-border/30">
+          <CardTitle>Quick Actions</CardTitle>
+          <CardDescription>Common tasks and shortcuts</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Button onClick={() => setActiveSection('upload')} className="h-auto py-6 flex flex-col gap-2 bg-gradient-to-br from-blue-500/90 to-blue-600/90 hover:from-blue-600 hover:to-blue-700 text-white shadow-lg">
+              <CloudUploadIcon className="w-8 h-8" />
+              <span className="font-semibold">Upload New Record</span>
+            </Button>
+            <Button onClick={() => setActiveSection('records')} variant="outline" className="h-auto py-6 flex flex-col gap-2 hover:bg-white/60 dark:hover:bg-muted/40">
+              <FileTextIcon className="w-8 h-8" />
+              <span className="font-semibold">View My Records</span>
+            </Button>
+            <Button onClick={() => setActiveSection('permissions')} variant="outline" className="h-auto py-6 flex flex-col gap-2 hover:bg-white/60 dark:hover:bg-muted/40">
+              <KeyIcon className="w-8 h-8" />
+              <span className="font-semibold">Manage Permissions</span>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 
   // Profile Section
   const renderProfile = () => (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between border-b">
+    <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl">
+      <CardHeader className="flex flex-row items-center justify-between border-b-2 border-white/30 dark:border-border/30">
         <div>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <UserIcon className="w-6 h-6 text-ehr-blue-600" />
-            My Profile
-          </CardTitle>
-          <CardDescription>Manage your personal information</CardDescription>
+          <CardTitle className="flex items-center gap-2 text-xl"><UserIcon className="w-6 h-6 text-primary" />My Profile</CardTitle>
+          <CardDescription>Manage your personal and medical information</CardDescription>
         </div>
         {!isEditingProfile && (
-          <Button onClick={() => setIsEditingProfile(true)} className="bg-ehr-blue-600">
-            <EditIcon className="w-4 h-4 mr-2" />
-            Edit Profile
+          <Button onClick={() => setIsEditingProfile(true)} className="bg-gradient-to-r from-primary to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg">
+            <EditIcon className="w-4 h-4 mr-2" />Edit Profile
           </Button>
         )}
       </CardHeader>
       <CardContent className="pt-6">
-        <form className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="fullName" className="text-sm font-semibold">Full Name</Label>
-              <Input id="fullName" defaultValue={currentUser.fullName} disabled={!isEditingProfile} className="h-11" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-semibold">Email</Label>
-              <Input id="email" type="email" defaultValue={currentUser.email} disabled={!isEditingProfile} className="h-11" />
-            </div>
-          </div>
+        <Tabs defaultValue="personal" className="w-full">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="personal">Personal Info</TabsTrigger>
+            <TabsTrigger value="medical">Medical Info</TabsTrigger>
+            <TabsTrigger value="blockchain">Blockchain</TabsTrigger>
+          </TabsList>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="dob" className="text-sm font-semibold">Date of Birth</Label>
-              <Input id="dob" type="date" defaultValue={currentUser.dateOfBirth} disabled={!isEditingProfile} className="h-11" />
+          <TabsContent value="personal" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input id="fullName" defaultValue={currentUser.fullName} disabled={!isEditingProfile} className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" type="email" defaultValue={currentUser.email} disabled={!isEditingProfile} className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">Phone Number</Label>
+                <Input id="phone" type="tel" defaultValue={currentUser.phone} disabled={!isEditingProfile} className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="dob">Date of Birth</Label>
+                <Input id="dob" type="date" defaultValue={currentUser.dateOfBirth} disabled={!isEditingProfile} className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40" />
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="gender" className="text-sm font-semibold">Gender</Label>
-              <Select disabled={!isEditingProfile} defaultValue={currentUser.gender}>
-                <SelectTrigger className="h-11">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="male">Male</SelectItem>
-                  <SelectItem value="female">Female</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label htmlFor="address">Address</Label>
+              <Textarea id="address" rows={3} defaultValue={currentUser.address} disabled={!isEditingProfile} className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40 resize-none" />
             </div>
-          </div>
+          </TabsContent>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="space-y-2">
-              <Label htmlFor="bloodGroup" className="text-sm font-semibold">Blood Group</Label>
-              <Select disabled={!isEditingProfile} defaultValue={currentUser.bloodGroup}>
-                <SelectTrigger className="h-11">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="A+">A+</SelectItem>
-                  <SelectItem value="A-">A-</SelectItem>
-                  <SelectItem value="B+">B+</SelectItem>
-                  <SelectItem value="B-">B-</SelectItem>
-                  <SelectItem value="AB+">AB+</SelectItem>
-                  <SelectItem value="AB-">AB-</SelectItem>
-                  <SelectItem value="O+">O+</SelectItem>
-                  <SelectItem value="O-">O-</SelectItem>
-                </SelectContent>
-              </Select>
+          <TabsContent value="medical" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <Label htmlFor="bloodGroup">Blood Group</Label>
+                <Select disabled={!isEditingProfile} defaultValue={currentUser.bloodGroup}>
+                  <SelectTrigger className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map(bg => <SelectItem key={bg} value={bg}>{bg}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="gender">Gender</Label>
+                <Select disabled={!isEditingProfile} defaultValue={currentUser.gender}>
+                  <SelectTrigger className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                    <SelectItem value="other">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone" className="text-sm font-semibold">Phone Number</Label>
-              <Input id="phone" type="tel" defaultValue={currentUser.phone} disabled={!isEditingProfile} className="h-11" />
-            </div>
-          </div>
+          </TabsContent>
 
-          <div className="space-y-2">
-            <Label htmlFor="address" className="text-sm font-semibold">Address</Label>
-            <Textarea id="address" rows={3} defaultValue={currentUser.address} disabled={!isEditingProfile} className="resize-none" />
-          </div>
-
-          {isEditingProfile && (
-            <div className="flex gap-3 pt-4 border-t">
-              <Button
-                type="button"
-                onClick={() => {
-                  setIsEditingProfile(false);
-                  toast.success('Profile updated successfully!');
-                }}
-                className="bg-ehr-blue-600"
-              >
-                <SaveIcon className="w-4 h-4 mr-2" />
-                Save Changes
-              </Button>
-              <Button type="button" variant="outline" onClick={() => setIsEditingProfile(false)}>
-                <XIcon className="w-4 h-4 mr-2" />
-                Cancel
-              </Button>
+          <TabsContent value="blockchain" className="space-y-6">
+            <div className="p-4 bg-gradient-to-br from-primary/20 to-amber-600/20 border-2 border-primary/30 rounded-lg">
+              <div className="flex items-center gap-2 mb-2">
+                <ShieldCheckIcon className="w-5 h-5 text-primary" />
+                <span className="font-semibold text-foreground">Blockchain Address</span>
+              </div>
+              <p className="text-sm font-mono text-muted-foreground">{currentUser.blockchainAddress}</p>
             </div>
-          )}
-        </form>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 bg-white/50 dark:bg-muted/30 backdrop-blur-sm border border-white/40 dark:border-border/40 rounded-lg">
+                <p className="text-sm text-muted-foreground mb-1">Network</p>
+                <p className="font-semibold text-foreground">Ganache (Local)</p>
+              </div>
+              <div className="p-4 bg-white/50 dark:bg-muted/30 backdrop-blur-sm border border-white/40 dark:border-border/40 rounded-lg">
+                <p className="text-sm text-muted-foreground mb-1">Encryption</p>
+                <p className="font-semibold text-foreground">AES-128</p>
+              </div>
+            </div>
+          </TabsContent>
+        </Tabs>
+
+        {isEditingProfile && (
+          <div className="flex gap-3 pt-6 border-t border-white/30 dark:border-border/30">
+            <Button onClick={() => { setIsEditingProfile(false); toast.success('Profile updated!'); }} className="bg-gradient-to-r from-primary to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg">
+              <SaveIcon className="w-4 h-4 mr-2" />Save Changes
+            </Button>
+            <Button variant="outline" onClick={() => setIsEditingProfile(false)}>
+              <XIcon className="w-4 h-4 mr-2" />Cancel
+            </Button>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
 
   // Medical Records Section
   const renderRecords = () => (
-    <Card>
-      <CardHeader className="border-b">
-        <div>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <FileTextIcon className="w-6 h-6 text-ehr-blue-600" />
-            Medical Records
-          </CardTitle>
-          <CardDescription>View and manage your medical records</CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-6">
-        {medicalRecords.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {medicalRecords.map((record) => (
-              <div
-                key={record.id}
-                className="group p-5 border-2 border-gray-200 rounded-xl hover:border-ehr-blue-400 hover:shadow-lg transition-all"
-              >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="p-3 bg-blue-100 rounded-xl group-hover:bg-blue-200 transition-colors">
-                    <FileIcon className="w-6 h-6 text-blue-600" />
-                  </div>
-                  <span className={cn('px-2.5 py-1 text-xs font-semibold rounded-full border capitalize', getRecordTypeColor(record.type))}>
-                    {record.type}
-                  </span>
-                </div>
-                <h3 className="font-semibold text-gray-900 mb-2 line-clamp-2">{record.title}</h3>
-                <p className="text-sm text-gray-600 mb-3 line-clamp-2">{record.description}</p>
-                <div className="flex items-center gap-2 text-xs text-gray-500 mb-4">
-                  <CalendarIcon className="w-3 h-3" />
-                  <span>{formatDate(record.uploadedAt)}</span>
-                  <span className="mx-1">•</span>
-                  <span>{record.fileSize}</span>
-                </div>
-                <div className="flex items-center gap-1 text-xs text-green-600 mb-4">
-                  <ShieldCheckIcon className="w-3 h-3" />
-                  <span>AES-128 Encrypted</span>
-                </div>
-                <div className="flex gap-2">
-                  <Button size="sm" variant="outline" className="flex-1 hover:bg-ehr-blue-50">
-                    <EyeIcon className="w-4 h-4 mr-1" />
-                    View
-                  </Button>
-                  <Button size="sm" variant="ghost" className="hover:bg-blue-50 hover:text-blue-600">
-                    <DownloadIcon className="w-4 h-4" />
-                  </Button>
-                  <Button size="sm" variant="ghost" className="hover:bg-red-50 hover:text-red-600">
-                    <TrashIcon className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-12 text-gray-500">
-            <FileIcon className="w-16 h-16 mx-auto mb-4 opacity-30" />
-            <p className="text-lg font-medium mb-2">No medical records yet</p>
-            <p className="text-sm mb-4">Upload your first medical record to get started</p>
-            <Button onClick={() => setActiveSection('upload')} className="bg-ehr-blue-600">
-              <UploadIcon className="w-4 h-4 mr-2" />
-              Upload Record
+    <div className="space-y-6">
+      <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl">
+        <CardHeader>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-xl"><FileTextIcon className="w-6 h-6 text-primary" />Medical Records</CardTitle>
+              <CardDescription>View and manage your encrypted records</CardDescription>
+            </div>
+            <Button onClick={() => setActiveSection('upload')} className="bg-gradient-to-r from-primary to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg">
+              <UploadIcon className="w-4 h-4 mr-2" />Upload New
             </Button>
           </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-
-  // Upload Record Section
-  const renderUpload = () => (
-    <Card>
-      <CardHeader className="border-b">
-        <div>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <UploadIcon className="w-6 h-6 text-ehr-blue-600" />
-            Upload Medical Record
-          </CardTitle>
-          <CardDescription>Securely upload and encrypt your medical records</CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-6">
-        <form
-          className="space-y-6"
-          onSubmit={(e) => {
-            e.preventDefault();
-            toast.success('Medical record uploaded and encrypted successfully!');
-          }}
-        >
-          <div className="space-y-2">
-            <Label htmlFor="recordTitle" className="text-sm font-semibold">Record Title</Label>
-            <Input
-              id="recordTitle"
-              placeholder="e.g., Blood Test Results"
-              className="h-11"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="recordType" className="text-sm font-semibold">Record Type</Label>
-            <Select>
-              <SelectTrigger className="h-11">
-                <SelectValue placeholder="Select type" />
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-col md:flex-row gap-4">
+            <div className="relative flex-1">
+              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
+              <Input placeholder="Search records..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="pl-10 bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40" />
+            </div>
+            <Select value={filterType} onValueChange={setFilterType}>
+              <SelectTrigger className="w-full md:w-48 bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40">
+                <FilterIcon className="w-4 h-4 mr-2" />
+                <SelectValue placeholder="Filter" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
                 <SelectItem value="lab">Lab Results</SelectItem>
-                <SelectItem value="prescription">Prescription</SelectItem>
-                <SelectItem value="imaging">Imaging/X-Ray</SelectItem>
-                <SelectItem value="diagnosis">Diagnosis</SelectItem>
-                <SelectItem value="other">Other</SelectItem>
+                <SelectItem value="prescription">Prescriptions</SelectItem>
+                <SelectItem value="imaging">Imaging</SelectItem>
               </SelectContent>
             </Select>
           </div>
+        </CardContent>
+      </Card>
 
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {medicalRecords.map((record) => (
+          <Card key={record.id} className="bg-white/60 dark:bg-card/60 backdrop-blur-sm border-2 border-white/40 dark:border-border/40 hover:shadow-xl hover:border-primary/50 transition-all group">
+            <CardHeader className="pb-3">
+              <div className="flex items-start justify-between mb-2">
+                <div className="p-2.5 bg-gradient-to-br from-blue-500/90 to-blue-600/90 rounded-lg shadow-lg group-hover:scale-110 transition-transform">
+                  <FileIcon className="w-6 h-6 text-white" />
+                </div>
+                {getRecordTypeBadge(record.type)}
+              </div>
+              <CardTitle className="text-lg line-clamp-2">{record.title}</CardTitle>
+              <CardDescription className="line-clamp-2">{record.description}</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="space-y-2 text-xs text-muted-foreground">
+                <div className="flex items-center gap-2"><CalendarIcon className="w-3 h-3" /><span>{formatDate(record.uploadedAt)}</span></div>
+                <div className="flex items-center gap-2"><UserIcon className="w-3 h-3" /><span>By: {record.uploadedBy}</span></div>
+                <div className="flex items-center gap-2"><FileIcon className="w-3 h-3" /><span>{record.fileSize}</span></div>
+              </div>
+              <div className="flex items-center gap-2 p-2 bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg">
+                <ShieldCheckIcon className="w-4 h-4 text-green-600 dark:text-green-400" />
+                <span className="text-xs font-medium text-green-700 dark:text-green-400">AES-128 Encrypted</span>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <Button size="sm" variant="outline" className="flex-1 hover:bg-white/60 dark:hover:bg-muted/40"><EyeIcon className="w-4 h-4 mr-1" />View</Button>
+                <Button size="sm" variant="ghost" className="hover:bg-blue-50 dark:hover:bg-blue-950/30 hover:text-blue-600"><DownloadIcon className="w-4 h-4" /></Button>
+                <Button size="sm" variant="ghost" className="hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600"><TrashIcon className="w-4 h-4" /></Button>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Upload Section
+  const renderUpload = () => (
+    <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl max-w-3xl mx-auto">
+      <CardHeader className="border-b border-white/30 dark:border-border/30">
+        <CardTitle className="flex items-center gap-2 text-xl"><CloudUploadIcon className="w-6 h-6 text-primary" />Upload Medical Record</CardTitle>
+        <CardDescription>Securely upload and encrypt your records on blockchain</CardDescription>
+      </CardHeader>
+      <CardContent className="pt-6">
+        <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); toast.success('Record uploaded!'); }}>
           <div className="space-y-2">
-            <Label htmlFor="recordDate" className="text-sm font-semibold">Record Date</Label>
-            <Input id="recordDate" type="date" className="h-11" />
+            <Label htmlFor="recordTitle">Record Title *</Label>
+            <Input id="recordTitle" placeholder="e.g., Blood Test - Jan 2026" required className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40" />
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="recordDescription" className="text-sm font-semibold">Description</Label>
-            <Textarea
-              id="recordDescription"
-              rows={4}
-              placeholder="Add any additional notes..."
-              className="resize-none"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="recordFile" className="text-sm font-semibold">Upload File</Label>
-            <div className="border-2 border-dashed border-gray-300 rounded-xl p-10 text-center hover:border-ehr-blue-400 hover:bg-ehr-blue-50/50 transition-all cursor-pointer">
-              <CloudUploadIcon className="w-16 h-16 mx-auto mb-4 text-gray-400" />
-              <p className="text-sm text-gray-600 font-medium mb-1">Click to upload or drag and drop</p>
-              <p className="text-xs text-gray-500">PDF, JPG, PNG, DOC (Max 10MB)</p>
-              <Input
-                id="recordFile"
-                type="file"
-                className="hidden"
-                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <Label htmlFor="recordType">Record Type *</Label>
+              <Select>
+                <SelectTrigger className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="lab">Lab Results</SelectItem>
+                  <SelectItem value="prescription">Prescription</SelectItem>
+                  <SelectItem value="imaging">Imaging/X-Ray</SelectItem>
+                  <SelectItem value="diagnosis">Diagnosis</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="recordDate">Record Date *</Label>
+              <Input id="recordDate" type="date" required className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40" />
             </div>
           </div>
-
-          <div className="flex items-start gap-3 p-4 bg-blue-50 border border-blue-200 rounded-xl">
-            <LockIcon className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
-            <div className="flex-1">
-              <p className="text-sm font-semibold text-blue-900 mb-1">End-to-End Encryption</p>
-              <p className="text-xs text-blue-700">
-                Your file will be encrypted using AES-128 encryption before uploading to IPFS.
-                Only authorized users can decrypt and view your records.
-              </p>
+          <div className="space-y-2">
+            <Label htmlFor="description">Description</Label>
+            <Textarea id="description" rows={4} placeholder="Details..." className="bg-white/60 dark:bg-muted/40 backdrop-blur-sm border-white/40 dark:border-border/40 resize-none" />
+          </div>
+          <div className="space-y-2">
+            <Label>Upload File *</Label>
+            <div className="border-2 border-dashed border-primary/30 rounded-lg p-8 text-center bg-white/50 dark:bg-muted/30 backdrop-blur-sm hover:border-primary/60 transition-colors cursor-pointer">
+              <CloudUploadIcon className="w-12 h-12 mx-auto mb-4 text-primary" />
+              <p className="text-sm font-medium mb-1">Click to upload or drag and drop</p>
+              <p className="text-xs text-muted-foreground">PDF, PNG, JPG (Max 10MB)</p>
             </div>
           </div>
-
-          <div className="flex gap-3 pt-4 border-t">
-            <Button type="submit" className="bg-ehr-blue-600">
-              <UploadIcon className="w-4 h-4 mr-2" />
-              Upload & Encrypt
+          <div className="p-4 bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg">
+            <div className="flex items-start gap-3">
+              <ShieldCheckIcon className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-blue-900 dark:text-blue-100">Encryption & Privacy</p>
+                <p className="text-xs text-blue-700 dark:text-blue-300 mt-1">AES-128 encryption before IPFS storage and blockchain recording</p>
+              </div>
+            </div>
+          </div>
+          <div className="flex gap-3 pt-4">
+            <Button type="submit" className="flex-1 bg-gradient-to-r from-primary to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white shadow-lg">
+              <CloudUploadIcon className="w-4 h-4 mr-2" />Upload & Encrypt
             </Button>
-            <Button type="reset" variant="outline">
-              <XIcon className="w-4 h-4 mr-2" />
-              Clear
-            </Button>
+            <Button type="button" variant="outline" onClick={() => setActiveSection('records')}>Cancel</Button>
           </div>
         </form>
       </CardContent>
@@ -645,273 +541,224 @@ const PatientDashboard = () => {
   );
 
   // Access Requests Section
-  const renderRequests = () => (
-    <Card>
-      <CardHeader className="border-b">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <BellIcon className="w-6 h-6 text-ehr-blue-600" />
-              Access Requests
-            </CardTitle>
-            <CardDescription>Review and manage access requests from healthcare providers</CardDescription>
-          </div>
-          {stats.pendingRequests > 0 && (
-            <span className="px-3 py-1 bg-red-100 text-red-700 border border-red-200 rounded-full text-sm font-semibold">
-              {stats.pendingRequests} Pending
-            </span>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent className="pt-6">
-        <div className="space-y-4">
-          {accessRequests.map((request) => (
-            <div
-              key={request.id}
-              className={cn(
-                'p-5 border-2 rounded-xl',
-                request.status === 'pending' ? 'border-orange-200 bg-orange-50/50' : 'border-gray-200',
-              )}
-            >
-              <div className="flex items-start gap-4 mb-4">
-                <img
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(request.requesterName)}&background=2563eb&color=fff`}
-                  alt={request.requesterName}
-                  className="w-14 h-14 rounded-full border-2 border-white shadow-md"
-                />
-                <div className="flex-1">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="font-semibold text-gray-900 text-lg">{request.requesterName}</h3>
-                      <p className="text-sm text-gray-600">
-                        {request.requesterSpecialty || request.requesterDepartment}
-                      </p>
-                    </div>
-                    <span
-                      className={cn(
-                        'px-3 py-1 text-xs font-semibold rounded-full border capitalize',
-                        getStatusColor(request.status),
-                      )}
-                    >
-                      {request.status}
-                    </span>
+  const renderAccessRequests = () => (
+    <div className="space-y-6">
+      <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-xl">
+            <BellIcon className="w-6 h-6 text-primary" />Access Requests
+            {stats.pendingRequests > 0 && <Badge className="ml-2 bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800">{stats.pendingRequests} Pending</Badge>}
+          </CardTitle>
+          <CardDescription>Review access requests from healthcare professionals</CardDescription>
+        </CardHeader>
+      </Card>
+
+      <Tabs defaultValue="pending" className="w-full">
+        <TabsList className="grid w-full grid-cols-3">
+          <TabsTrigger value="pending">Pending ({accessRequests.filter(r => r.status === 'pending').length})</TabsTrigger>
+          <TabsTrigger value="approved">Approved ({accessRequests.filter(r => r.status === 'approved').length})</TabsTrigger>
+          <TabsTrigger value="denied">Denied (0)</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="pending" className="space-y-4 mt-6">
+          {accessRequests.filter(r => r.status === 'pending').map((req) => (
+            <Card key={req.id} className="bg-white/60 dark:bg-card/60 backdrop-blur-sm border-2 border-white/40 dark:border-border/40 hover:shadow-xl hover:border-primary/50 transition-all">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4 mb-4">
+                  <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(req.requesterName)}&background=f59e0b&color=000`} alt={req.requesterName} className="w-16 h-16 rounded-full border-2 border-white dark:border-gray-700 shadow-lg" />
+                  <div className="flex-1">
+                    <h3 className="font-semibold text-lg text-foreground">{req.requesterName}</h3>
+                    <p className="text-sm text-muted-foreground">{req.requesterSpecialty}</p>
+                    <p className="text-xs text-muted-foreground font-mono mt-1">{req.requesterAddress}</p>
                   </div>
-                  <p className="text-sm text-gray-700 mb-3 bg-white p-3 rounded-lg border">
-                    {request.reason}
-                  </p>
-                  <div className="flex items-center gap-4 text-xs text-gray-500">
-                    <div className="flex items-center gap-1">
-                      <ClockIcon className="w-3 h-3" />
-                      <span>Duration: {request.duration}</span>
-                    </div>
-                    <span>•</span>
-                    <span>Requested {getRelativeTime(request.requestedAt)}</span>
+                  {getStatusBadge(req.status)}
+                </div>
+                <div className="space-y-3 mb-4">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">Reason</Label>
+                    <p className="text-sm text-foreground mt-1">{req.reason}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div><Label className="text-xs text-muted-foreground">Duration</Label><p className="text-foreground mt-1">{req.duration}</p></div>
+                    <div><Label className="text-xs text-muted-foreground">Requested</Label><p className="text-foreground mt-1">{getRelativeTime(req.requestedAt)}</p></div>
                   </div>
                 </div>
-              </div>
-              {request.status === 'pending' && (
-                <div className="flex gap-3 pt-4 border-t">
-                  <Button
-                    size="sm"
-                    className="flex-1 bg-green-600 hover:bg-green-700"
-                    onClick={() => handleApproveRequest(request)}
-                  >
-                    <CheckCircle2Icon className="w-4 h-4 mr-2" />
-                    Approve Request
+                <div className="flex gap-2">
+                  <Button size="sm" className="flex-1 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-lg" onClick={() => toast.success(`Approved ${req.requesterName}`)}>
+                    <CheckCircle2Icon className="w-4 h-4 mr-2" />Approve
                   </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="flex-1 hover:bg-red-50 hover:text-red-600 hover:border-red-300"
-                    onClick={() => handleDenyRequest(request)}
-                  >
-                    <XCircleIcon className="w-4 h-4 mr-2" />
-                    Deny Request
+                  <Button size="sm" variant="outline" className="flex-1 hover:bg-red-50 dark:hover:bg-red-950/50 hover:text-red-600" onClick={() => toast.error(`Denied ${req.requesterName}`)}>
+                    <XCircleIcon className="w-4 h-4 mr-2" />Deny
                   </Button>
                 </div>
-              )}
-            </div>
+              </CardContent>
+            </Card>
           ))}
-        </div>
-      </CardContent>
-    </Card>
+        </TabsContent>
+
+        <TabsContent value="approved" className="space-y-4 mt-6">
+          {accessRequests.filter(r => r.status === 'approved').map((req) => (
+            <Card key={req.id} className="bg-white/60 dark:bg-card/60 backdrop-blur-sm border-2 border-white/40 dark:border-border/40">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-4">
+                    <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(req.requesterName)}&background=f59e0b&color=000`} alt={req.requesterName} className="w-12 h-12 rounded-full border-2 border-white dark:border-gray-700 shadow-lg" />
+                    <div>
+                      <h3 className="font-semibold text-foreground">{req.requesterName}</h3>
+                      <p className="text-sm text-muted-foreground">{req.requesterSpecialty}</p>
+                      <p className="text-xs text-muted-foreground mt-1">Approved {getRelativeTime(req.requestedAt)}</p>
+                    </div>
+                  </div>
+                  {getStatusBadge(req.status)}
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </TabsContent>
+
+        <TabsContent value="denied" className="mt-6">
+          <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30">
+            <CardContent className="text-center py-12">
+              <p className="text-sm text-muted-foreground">No denied requests</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 
   // Permissions Section
   const renderPermissions = () => (
-    <Card>
-      <CardHeader className="border-b">
-        <div>
-          <CardTitle className="flex items-center gap-2 text-xl">
-            <KeyIcon className="w-6 h-6 text-ehr-blue-600" />
-            Access Permissions
-          </CardTitle>
-          <CardDescription>Manage who has access to your medical records</CardDescription>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-6">
-        <div className="space-y-4">
-          {permissions.map((permission) => (
-            <div
-              key={permission.id}
-              className={cn(
-                'p-5 border-2 rounded-xl',
-                permission.status === 'active' ? 'border-green-200 bg-green-50/50' : 'border-gray-200',
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <img
-                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(permission.userName)}&background=10b981&color=fff`}
-                    alt={permission.userName}
-                    className="w-12 h-12 rounded-full border-2 border-white shadow-md"
-                  />
-                  <div>
-                    <h3 className="font-semibold text-gray-900">{permission.userName}</h3>
-                    <div className="flex items-center gap-3 text-sm text-gray-600">
-                      <span className="capitalize">{permission.userRole}</span>
-                      <span>•</span>
-                      <span className="capitalize font-medium">{permission.accessLevel} Access</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-xs text-gray-500 mt-1">
-                      <span>Granted {formatDate(permission.grantedAt)}</span>
-                      {permission.expiresAt && (
-                        <>
-                          <span>•</span>
-                          <span>Expires {formatDate(permission.expiresAt)}</span>
-                        </>
-                      )}
+    <div className="space-y-6">
+      <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl">
+        <CardHeader>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2 text-xl"><KeyIcon className="w-6 h-6 text-primary" />Permissions Management</CardTitle>
+              <CardDescription>Control who can access your medical records</CardDescription>
+            </div>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <UsersIcon className="w-4 h-4" />
+              <span>{stats.authorizedUsers} Active Permissions</span>
+            </div>
+          </div>
+        </CardHeader>
+      </Card>
+
+      <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>User</TableHead>
+              <TableHead>Role</TableHead>
+              <TableHead>Granted</TableHead>
+              <TableHead>Expires</TableHead>
+              <TableHead>Access</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {permissions.map((perm) => (
+              <TableRow key={perm.id} className="hover:bg-white/50 dark:hover:bg-muted/30">
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(perm.userName)}&background=f59e0b&color=000`} alt={perm.userName} className="w-10 h-10 rounded-full border-2 border-white dark:border-gray-700 shadow-lg" />
+                    <div>
+                      <p className="font-medium">{perm.userName}</p>
+                      <p className="text-xs text-muted-foreground font-mono">{perm.userAddress}</p>
                     </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <span
-                    className={cn(
-                      'px-3 py-1 text-xs font-semibold rounded-full border capitalize',
-                      getStatusColor(permission.status),
-                    )}
-                  >
-                    {permission.status}
-                  </span>
-                  {permission.status === 'active' && (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="hover:bg-red-50 hover:text-red-600 hover:border-red-300"
-                      onClick={() => handleRevokePermission(permission)}
-                    >
-                      <XIcon className="w-4 h-4 mr-1" />
-                      Revoke
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+                </TableCell>
+                <TableCell><Badge variant="outline">{perm.userRole}</Badge></TableCell>
+                <TableCell className="text-sm text-muted-foreground">{formatDate(perm.grantedAt)}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{formatDate(perm.expiresAt)}</TableCell>
+                <TableCell><div className="flex items-center gap-2"><ActivityIcon className="w-4 h-4 text-muted-foreground" /><span className="font-medium">{perm.accessCount}</span></div></TableCell>
+                <TableCell>{getStatusBadge(perm.status)}</TableCell>
+                <TableCell className="text-right">
+                  <Button size="sm" variant="ghost" className="hover:bg-red-50 dark:hover:bg-red-950/30 hover:text-red-600" onClick={() => toast.info(`Revoked ${perm.userName}`)}>
+                    <LockIcon className="w-4 h-4 mr-1" />Revoke
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
+    </div>
   );
 
   // Audit Log Section
-  const renderAudit = () => (
-    <Card>
-      <CardHeader className="border-b">
-        <div className="flex items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2 text-xl">
-              <HistoryIcon className="w-6 h-6 text-ehr-blue-600" />
-              Audit Log
-            </CardTitle>
-            <CardDescription>Complete history of all activities on your records</CardDescription>
-          </div>
-          <Select defaultValue="all">
-            <SelectTrigger className="w-48">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Activities</SelectItem>
-              <SelectItem value="access">Access Events</SelectItem>
-              <SelectItem value="upload">Uploads</SelectItem>
-              <SelectItem value="permission">Permissions</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </CardHeader>
-      <CardContent className="pt-6">
-        <div className="space-y-3">
-          {auditLogs.map((log, index) => (
-            <div
-              key={log.id}
-              className="flex items-start gap-4 p-4 bg-gray-50 rounded-xl hover:bg-gray-100 transition-colors"
-            >
-              <div className="shrink-0 relative">
-                <div
-                  className={cn(
-                    'p-2.5 rounded-xl',
-                    log.type === 'upload' ? 'bg-blue-100' :
-                    log.type === 'access' ? 'bg-green-100' :
-                    log.type === 'permission' ? 'bg-purple-100' :
-                    log.type === 'login' ? 'bg-cyan-100' :
-                    'bg-orange-100',
-                  )}
-                >
-                  {log.type === 'upload' && <UploadIcon className="w-4 h-4 text-blue-600" />}
-                  {log.type === 'access' && <EyeIcon className="w-4 h-4 text-green-600" />}
-                  {log.type === 'permission' && <KeyIcon className="w-4 h-4 text-purple-600" />}
-                  {log.type === 'request' && <BellIcon className="w-4 h-4 text-orange-600" />}
-                  {log.type === 'login' && <UserIcon className="w-4 h-4 text-cyan-600" />}
-                </div>
-                {index < auditLogs.length - 1 && (
-                  <div className="absolute left-1/2 top-full h-3 w-0.5 bg-gray-200 -translate-x-1/2" />
-                )}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{log.action}</p>
-                {log.details && (
-                  <p className="text-xs text-gray-600 mt-1">{log.details}</p>
-                )}
-                <p className="text-xs text-gray-500 mt-1">{formatDateTime(log.timestamp)}</p>
-              </div>
-              <span className="text-xs px-2 py-1 bg-white border border-gray-200 rounded-lg capitalize">
-                {log.type}
-              </span>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+  const renderAuditLog = () => (
+    <div className="space-y-6">
+      <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2 text-xl"><HistoryIcon className="w-6 h-6 text-primary" />Audit Log</CardTitle>
+          <CardDescription>Complete history of all activities on your records</CardDescription>
+        </CardHeader>
+      </Card>
+
+      <Card className="bg-white/80 dark:bg-card/80 backdrop-blur-md border-2 border-white/30 dark:border-border/30 shadow-xl">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead>Action</TableHead>
+              <TableHead>Performed By</TableHead>
+              <TableHead>Timestamp</TableHead>
+              <TableHead>Details</TableHead>
+              <TableHead className="text-right">Transaction</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {auditLogs.map((log) => (
+              <TableRow key={log.id} className="hover:bg-white/50 dark:hover:bg-muted/30">
+                <TableCell>
+                  <div className="flex items-center gap-3">
+                    <div className={cn('p-2 rounded-lg shadow-sm', log.type === 'upload' && 'bg-gradient-to-br from-blue-500/90 to-blue-600/90', log.type === 'access' && 'bg-gradient-to-br from-green-500/90 to-green-600/90', log.type === 'permission' && 'bg-gradient-to-br from-purple-500/90 to-purple-600/90')}>
+                      {log.type === 'upload' && <UploadIcon className="w-4 h-4 text-white" />}
+                      {log.type === 'access' && <EyeIcon className="w-4 h-4 text-white" />}
+                      {log.type === 'permission' && <KeyIcon className="w-4 h-4 text-white" />}
+                    </div>
+                    <span className="font-medium">{log.action}</span>
+                  </div>
+                </TableCell>
+                <TableCell className="text-sm">{log.performedBy}</TableCell>
+                <TableCell className="text-sm text-muted-foreground">{formatDateTime(log.timestamp)}</TableCell>
+                <TableCell className="text-sm text-muted-foreground max-w-md truncate">{log.details}</TableCell>
+                <TableCell className="text-right">
+                  <Button variant="ghost" size="sm" className="font-mono text-xs">
+                    <FileCheckIcon className="w-3 h-3 mr-1" />{log.txHash}
+                  </Button>
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </Card>
+    </div>
   );
 
   const renderContent = () => {
     switch (activeSection) {
-      case 'dashboard':
-        return renderDashboard();
-      case 'profile':
-        return renderProfile();
-      case 'records':
-        return renderRecords();
-      case 'upload':
-        return renderUpload();
-      case 'requests':
-        return renderRequests();
-      case 'permissions':
-        return renderPermissions();
-      case 'audit':
-        return renderAudit();
-      default:
-        return renderDashboard();
+      case 'dashboard': return renderDashboard();
+      case 'profile': return renderProfile();
+      case 'records': return renderRecords();
+      case 'upload': return renderUpload();
+      case 'access': return renderAccessRequests();
+      case 'permissions': return renderPermissions();
+      case 'audit': return renderAuditLog();
+      default: return renderDashboard();
     }
   };
 
   return (
     <DashboardLayout
       userName={currentUser.fullName}
-      walletAddress={currentUser.walletAddress}
+      walletAddress={currentUser.blockchainAddress}
       navItems={navItems}
       activeSection={activeSection}
       onSectionChange={setActiveSection}
-      pageTitle={getSectionTitle()}
+      breadcrumbs={getBreadcrumbs()}
     >
       {renderContent()}
     </DashboardLayout>

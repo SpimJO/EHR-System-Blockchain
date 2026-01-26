@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,11 +28,16 @@ import {
   BuildingIcon,
   CalendarIcon,
   DropletIcon,
+  UsersIcon,
 } from 'lucide-react';
+import { authService } from '@/services/api/auth.service';
+import { RegisterRequest } from '@/types/api.types';
 
 type UserRole = '' | 'patient' | 'doctor' | 'staff';
+type Gender = 'MALE' | 'FEMALE' | 'OTHER';
 
 const Register = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [userRole, setUserRole] = useState<UserRole>('');
@@ -54,12 +59,16 @@ const Register = () => {
   // Patient fields
   const [dateOfBirth, setDateOfBirth] = useState('');
   const [bloodGroup, setBloodGroup] = useState('');
+  const [gender, setGender] = useState<Gender>('OTHER');
 
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setSuccess('');
 
     // Basic validation
     if (password !== confirmPassword) {
@@ -72,8 +81,41 @@ const Register = () => {
       return;
     }
 
-    // Placeholder - functionality to be added later
-    setSuccess('Registration functionality will be connected soon!');
+    if (!userRole) {
+      setError('Please select a user role');
+      return;
+    }
+
+    try {
+      setIsLoading(true);
+
+      const requestData: RegisterRequest = {
+        fullName,
+        email,
+        password,
+        role: userRole.toUpperCase() as 'PATIENT' | 'DOCTOR' | 'STAFF',
+        gender: gender,
+        dateOfBirth: dateOfBirth || new Date().toISOString(), // Default or actual
+        phoneNumber: phone,
+        // Optional fields based on role
+        ...(userRole === 'doctor' && { specialty, licenseNumber }),
+        ...(userRole === 'staff' && { department, employeeId }),
+        ...(userRole === 'patient' && { bloodGroup })
+      };
+
+      await authService.register(requestData);
+
+      setSuccess('Registration successful! Redirecting to login...');
+      setTimeout(() => {
+        navigate({ to: '/auth/login' });
+      }, 2000);
+
+    } catch (err: any) {
+      console.error(err);
+      setError(err.response?.data?.message || err.message || 'Registration failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleMetaMaskRegister = () => {
@@ -318,6 +360,23 @@ const Register = () => {
           {userRole === 'patient' && (
             <div className="space-y-5 p-6 bg-green-50/50 border border-green-100 rounded-xl">
               <div className="space-y-2">
+                <Label htmlFor="gender" className="flex items-center gap-2 text-green-700">
+                  <UsersIcon className="w-4 h-4" />
+                  Gender
+                </Label>
+                <Select value={gender} onValueChange={(val) => setGender(val as Gender)}>
+                  <SelectTrigger className="bg-white border-green-200 h-11 focus:ring-green-500">
+                    <SelectValue placeholder="Select your gender" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="MALE">Male</SelectItem>
+                    <SelectItem value="FEMALE">Female</SelectItem>
+                    <SelectItem value="OTHER">Other</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
                 <Label htmlFor="dateOfBirth" className="flex items-center gap-2 text-green-700">
                   <CalendarIcon className="w-4 h-4" />
                   Date of Birth
@@ -392,9 +451,15 @@ const Register = () => {
           </div>
 
           {/* Submit Button */}
-          <Button type="submit" className="w-full h-11 text-base bg-primary hover:bg-amber-600 text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5">
-            <UserPlusIcon className="w-4 h-4 mr-2" />
-            Create Account
+          <Button type="submit" disabled={isLoading} className="w-full h-11 text-base bg-primary hover:bg-amber-600 text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5">
+            {isLoading ? (
+              <>Creating Account...</>
+            ) : (
+              <>
+                <UserPlusIcon className="w-4 h-4 mr-2" />
+                Create Account
+              </>
+            )}
           </Button>
         </form>
 

@@ -1,5 +1,8 @@
 // Export all premium UI components
 
+// Brand
+export { Logo } from './brand/Logo';
+
 // Dashboard Components
 export { StatsCard } from './dashboard/StatsCard';
 export { ActivityFeed } from './dashboard/ActivityFeed';

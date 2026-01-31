@@ -119,7 +119,7 @@ class RecordsController extends Api {
     public async getRecordById(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const userId = req.user?.id;
-            const recordId = req.params.id;
+            const recordId: string = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
 
             if (!recordId) {
                 this.error(res, 400, "Record ID is required");

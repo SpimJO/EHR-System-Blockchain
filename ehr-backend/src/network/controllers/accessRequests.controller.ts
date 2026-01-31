@@ -104,7 +104,7 @@ class AccessRequestsController extends Api {
     public async approveAccessRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const userRole = req.user?.role;
-            const requesterAddress = req.params.requesterAddress;
+            const requesterAddress: string = Array.isArray(req.params.requesterAddress) ? req.params.requesterAddress[0] : req.params.requesterAddress;
 
             // Validate user is patient
             if (userRole !== "PATIENT") {
@@ -155,7 +155,7 @@ class AccessRequestsController extends Api {
     public async denyAccessRequest(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const userRole = req.user?.role;
-            const requesterAddress = req.params.requesterAddress;
+            const requesterAddress: string = Array.isArray(req.params.requesterAddress) ? req.params.requesterAddress[0] : req.params.requesterAddress;
 
             // Validate user is patient
             if (userRole !== "PATIENT") {

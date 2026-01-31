@@ -3,13 +3,6 @@ import { Link, useNavigate } from '@tanstack/react-router';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
@@ -24,13 +17,11 @@ import {
 } from 'lucide-react';
 import Cookies from 'js-cookie';
 import { authService } from '@/services/api/auth.service';
+import { setSession } from '@/lib/ehr/session';
 
 const Login = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
-  // Role is not strictly needed for login API but kept for UI consistency/future use
-  // We will default to empty or just ignore it for the API call
-  const [userRole, setUserRole] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
@@ -60,12 +51,24 @@ const Login = () => {
         // Save user to local storage
         localStorage.setItem('ehr_user', JSON.stringify(user));
 
+        // Set EHR session for middleware
+        const userRole = user.role.toLowerCase() as 'patient' | 'doctor' | 'staff';
+        setSession({
+          isLoggedIn: true,
+          userRole,
+          userEmail: user.email,
+          userName: user.fullName,
+          authMethod: 'traditional',
+          loginTimestamp: Date.now(),
+          walletAddress: user.blockchainAddress,
+        });
+
         setSuccess('Login successful! Redirecting...');
 
-        // Redirect based on role or to main dashboard
-        // Assuming /dashboard routes handle role-based redirection or display
+        // Redirect based on user role
         setTimeout(() => {
-          navigate({ to: '/dashboard' });
+          const dashboardPath = `/dashboard/${userRole}`;
+          navigate({ to: dashboardPath });
         }, 1000);
       }
     } catch (err: any) {
@@ -104,22 +107,22 @@ const Login = () => {
                   Blockchain Based with AES-encryption for Decentralized EHR System
                 </h1>
                 <p className="text-lg opacity-90 leading-relaxed text-amber-50">
-                  Secure, transparent, and patient-controlled healthcare records on the blockchain
+                  Your health records, secured and decentralized
                 </p>
               </div>
 
               <div className="space-y-5">
                 <div className="flex items-center gap-4 p-4 bg-white/10 rounded-xl backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors">
                   <LockIcon className="w-6 h-6 text-amber-100" />
-                  <span className="font-medium text-white">AES-128 Encryption</span>
+                  <span className="font-medium text-white">Encrypted Records</span>
                 </div>
                 <div className="flex items-center gap-4 p-4 bg-white/10 rounded-xl backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors">
                   <ShieldCheckIcon className="w-6 h-6 text-amber-100" />
-                  <span className="font-medium text-white">Blockchain Verified</span>
+                  <span className="font-medium text-white">Immutable Records</span>
                 </div>
                 <div className="flex items-center gap-4 p-4 bg-white/10 rounded-xl backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors">
                   <UserIcon className="w-6 h-6 text-amber-100" />
-                  <span className="font-medium text-white">Patient Controlled</span>
+                  <span className="font-medium text-white">You Control Access</span>
                 </div>
               </div>
             </div>
@@ -149,24 +152,6 @@ const Login = () => {
 
               {/* Login Form */}
               <form onSubmit={handleSubmit} className="space-y-5">
-                {/* User Role */}
-                <div className="space-y-2">
-                  <Label htmlFor="userRole" className="flex items-center gap-2 text-gray-700">
-                    <UserIcon className="w-4 h-4 text-primary" />
-                    User Role
-                  </Label>
-                  <Select value={userRole} onValueChange={setUserRole}>
-                    <SelectTrigger className="bg-gray-50 border-gray-200 h-11 focus:ring-primary">
-                      <SelectValue placeholder="Select your role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="patient">Patient</SelectItem>
-                      <SelectItem value="doctor">Doctor</SelectItem>
-                      <SelectItem value="staff">Staff</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
                 {/* Email */}
                 <div className="space-y-2">
                   <Label htmlFor="email" className="flex items-center gap-2 text-gray-700">

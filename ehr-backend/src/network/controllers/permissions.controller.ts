@@ -107,7 +107,7 @@ class PermissionsController extends Api {
     public async revokePermission(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const userRole = req.user?.role;
-            const authorizedAddress = req.params.userAddress;
+            const authorizedAddress: string = Array.isArray(req.params.userAddress) ? req.params.userAddress[0] : req.params.userAddress;
 
             // Validate user is patient
             if (userRole !== "PATIENT") {

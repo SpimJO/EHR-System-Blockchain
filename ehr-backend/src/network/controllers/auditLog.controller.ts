@@ -124,7 +124,7 @@ class AuditLogController extends Api {
      */
     public async verifyAuditEntry(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const transactionHash = req.params.transactionHash;
+            const transactionHash: string = Array.isArray(req.params.transactionHash) ? req.params.transactionHash[0] : req.params.transactionHash;
 
             if (!transactionHash || !transactionHash.startsWith("0x")) {
                 this.error(res, 400, "Invalid transaction hash");

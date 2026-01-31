@@ -1,9 +1,8 @@
+
 import { useState } from 'react';
 import DashboardLayout from '@/components/app/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -11,480 +10,598 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
-  HomeIcon,
-  UserIcon,
-  UsersIcon,
-  UserPlusIcon,
-  FileTextIcon,
-  FileIcon,
-  ClockIcon,
-  ActivityIcon,
-  EditIcon,
-  SaveIcon,
-  XIcon,
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from '@/components/ui/pagination';
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+} from '@/components/ui/chart';
+import {
+  LayoutDashboard,
+  Users,
+  FileKey,
+  Settings,
+  Search,
+  Plus,
+  Filter,
+  MoreHorizontal,
+  FileText,
+  UserPlus,
   EyeIcon,
-  BuildingIcon,
-  IdCardIcon,
-  SearchIcon,
+  TrashIcon,
+  EditIcon,
+  PhoneIcon
 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import StatsCard from '@/components/dashboard/StatsCard';
+import { Badge } from '@/components/ui/badge';
+import { toast } from 'sonner';
+import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts';
+
+// Mock Data for Staff Dashboard
+const MOCK_STATS = {
+  totalPatients: 1240,
+  newPatientsThisMonth: 86,
+  activeAccessRequests: 12,
+  pendingVerifications: 5
+};
+
+// Chart data for patient registration trend
+const chartData = [
+  { date: "Jan 1", patients: 45 },
+  { date: "Jan 2", patients: 23 },
+  { date: "Jan 3", patients: 67 },
+  { date: "Jan 4", patients: 45 },
+  { date: "Jan 5", patients: 89 },
+  { date: "Jan 6", patients: 56 },
+  { date: "Jan 7", patients: 34 },
+  { date: "Jan 8", patients: 78 },
+  { date: "Jan 9", patients: 45 },
+  { date: "Jan 10", patients: 92 },
+  { date: "Jan 11", patients: 56 },
+  { date: "Jan 12", patients: 78 },
+  { date: "Jan 13", patients: 67 },
+  { date: "Jan 14", patients: 45 },
+  { date: "Jan 15", patients: 89 },
+  { date: "Jan 16", patients: 76 },
+  { date: "Jan 17", patients: 54 },
+  { date: "Jan 18", patients: 87 },
+  { date: "Jan 19", patients: 65 },
+  { date: "Jan 20", patients: 43 },
+  { date: "Jan 21", patients: 78 },
+  { date: "Jan 22", patients: 92 },
+  { date: "Jan 23", patients: 67 },
+  { date: "Jan 24", patients: 54 },
+  { date: "Jan 25", patients: 81 },
+  { date: "Jan 26", patients: 69 },
+  { date: "Jan 27", patients: 47 },
+  { date: "Jan 28", patients: 85 },
+  { date: "Jan 29", patients: 72 },
+  { date: "Jan 30", patients: 58 },
+];
+
+const chartConfig = {
+  patients: {
+    label: "Patients",
+    color: "hsl(24.6 95% 53.1%)",
+  },
+};
+
+const MOCK_RECENT_PATIENTS = [
+  { id: '1', name: 'Marvin Dekidis', age: 34, gender: 'Male', status: 'Active', lastVisit: '2 days ago', type: 'Outpatient' },
+  { id: '2', name: 'Carter Lipshitz', age: 28, gender: 'Male', status: 'Pending', lastVisit: '1 week ago', type: 'Inpatient' },
+  { id: '3', name: 'Addison Philips', age: 45, gender: 'Female', status: 'Active', lastVisit: '3 days ago', type: 'Emergency' },
+  { id: '4', name: 'Craig Siphron', age: 52, gender: 'Male', status: 'Hold', lastVisit: '1 month ago', type: 'Outpatient' },
+  { id: '5', name: 'Emma Johnson', age: 29, gender: 'Female', status: 'Active', lastVisit: 'Yesterday', type: 'Checkup' },
+];
 
 const StaffDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
-  const [searchPatient, setSearchPatient] = useState('');
-
-  // Mock data
-  const stats = {
-    authorizedPatients: 12,
-    recordsAccessed: 45,
-    pendingRequests: 2,
-    recentActivity: 20,
-  };
+  const [currentPage, setCurrentPage] = useState(1);
+  const recordsPerPage = 5;
+  const totalRecords = 24;
 
   const navItems = [
-    {
-      id: 'dashboard',
-      label: 'Dashboard',
-      icon: <HomeIcon className="w-5 h-5" />,
-      section: 'dashboard',
-    },
-    {
-      id: 'profile',
-      label: 'My Profile',
-      icon: <UserIcon className="w-5 h-5" />,
-      section: 'profile',
-    },
-    {
-      id: 'patients',
-      label: 'My Patients',
-      icon: <UsersIcon className="w-5 h-5" />,
-      section: 'patients',
-    },
-    {
-      id: 'request',
-      label: 'Request Access',
-      icon: <UserPlusIcon className="w-5 h-5" />,
-      section: 'request',
-    },
-    {
-      id: 'records',
-      label: 'Patient Records',
-      icon: <FileTextIcon className="w-5 h-5" />,
-      section: 'records',
-    },
+    { id: 'nav-dashboard', label: 'Overview', icon: <LayoutDashboard className="w-4 h-4" />, section: 'dashboard' },
+    { id: 'nav-patients', label: 'Patients', icon: <Users className="w-4 h-4" />, section: 'patients' },
+    { id: 'nav-requests', label: 'Access Requests', icon: <FileKey className="w-4 h-4" />, badge: 3, section: 'requests' },
+    { id: 'nav-settings', label: 'Settings', icon: <Settings className="w-4 h-4" />, section: 'settings' },
   ];
 
-  const getSectionTitle = () => {
-    const item = navItems.find((nav) => nav.section === activeSection);
-    return item?.label || 'Dashboard';
+  const getBreadcrumbs = () => {
+    switch (activeSection) {
+      case 'dashboard': return [{ label: 'Dashboard', href: '/staff' }];
+      case 'patients': return [{ label: 'Dashboard', href: '/staff' }, { label: 'Patients' }];
+      case 'requests': return [{ label: 'Dashboard', href: '/staff' }, { label: 'Access Requests' }];
+      case 'settings': return [{ label: 'Dashboard', href: '/staff' }, { label: 'Settings' }];
+      default: return [{ label: 'Dashboard', href: '/staff' }];
+    }
   };
 
-  // Dashboard Section
-  const renderDashboard = () => (
-    <div className="space-y-6">
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
-          <CardContent className="flex items-center gap-4 pt-6">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <UsersIcon className="w-6 h-6 text-blue-600" />
-            </div>
-            <div>
-              <h3 className="text-3xl font-bold text-gray-900">{stats.authorizedPatients}</h3>
-              <p className="text-sm text-gray-500">Authorized Patients</p>
-            </div>
-          </CardContent>
-        </Card>
+  // --- Render Sections ---
 
-        <Card>
-          <CardContent className="flex items-center gap-4 pt-6">
-            <div className="p-3 bg-green-100 rounded-lg">
-              <FileIcon className="w-6 h-6 text-green-600" />
-            </div>
-            <div>
-              <h3 className="text-3xl font-bold text-gray-900">{stats.recordsAccessed}</h3>
-              <p className="text-sm text-gray-500">Records Accessed</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 pt-6">
-            <div className="p-3 bg-orange-100 rounded-lg">
-              <ClockIcon className="w-6 h-6 text-orange-600" />
-            </div>
-            <div>
-              <h3 className="text-3xl font-bold text-gray-900">{stats.pendingRequests}</h3>
-              <p className="text-sm text-gray-500">Pending Requests</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="flex items-center gap-4 pt-6">
-            <div className="p-3 bg-purple-100 rounded-lg">
-              <ActivityIcon className="w-6 h-6 text-purple-600" />
-            </div>
-            <div>
-              <h3 className="text-3xl font-bold text-gray-900">{stats.recentActivity}</h3>
-              <p className="text-sm text-gray-500">Recent Activity</p>
-            </div>
-          </CardContent>
-        </Card>
+  const renderOverview = () => (
+    <div className="space-y-6 animate-in fade-in-50 duration-500">
+      
+      {/* Top Stats Row matches "Sales Dashboard" top row but for Medical Staff */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatsCard
+          title="Total Patients"
+          value={MOCK_STATS.totalPatients.toLocaleString()}
+          icon={Users}
+          trend={{ value: 12, label: "vs last month", trend: 'up' }}
+          variant="gradient"
+        />
+        <StatsCard
+          title="New Registrations"
+          value={MOCK_STATS.newPatientsThisMonth}
+          icon={UserPlus}
+          trend={{ value: 5.2, label: "vs last month", trend: 'up' }}
+        />
+        <StatsCard
+          title="Access Requests"
+          value={MOCK_STATS.activeAccessRequests}
+          icon={FileKey}
+          trend={{ value: 2, label: "pending review", trend: 'down' }} 
+        />
+        <StatsCard
+          title="Verifications"
+          value={MOCK_STATS.pendingVerifications}
+          icon={FileText}
+          trend={{ value: 0, label: "all up to date", trend: 'neutral' }}
+        />
       </div>
 
-      {/* Recent Activity & My Patients */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <ActivityIcon className="w-5 h-5" />
-              Recent Activity
-            </CardTitle>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        
+        {/* Main Chart Area - "Registration Trend" with Area Chart */}
+        <Card className="lg:col-span-2 border-border/50 shadow-sm bg-card">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-lg font-semibold text-foreground">Patient Registration Trend</CardTitle>
+            <CardDescription>New patient onboardings over the last 30 days</CardDescription>
           </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                  <FileIcon className="w-5 h-5 text-blue-600 mt-0.5" />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">Accessed patient record</p>
-                    <p className="text-xs text-gray-500">{i} hour{i > 1 ? 's' : ''} ago</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+          <CardContent className="h-[280px]">
+            <ChartContainer config={chartConfig} className="h-full w-full">
+              <BarChart
+                accessibilityLayer
+                data={chartData}
+                margin={{
+                  left: 12,
+                  right: 12,
+                  top: 12,
+                  bottom: 12,
+                }}
+              >
+                <defs>
+                  <linearGradient id="barGradient" x1="0" y1="0" x2="0" y2="1">
+                    <stop
+                      offset="0%"
+                      stopColor="var(--color-patients)"
+                      stopOpacity={1}
+                    />
+                    <stop
+                      offset="100%"
+                      stopColor="var(--color-patients)"
+                      stopOpacity={0.3}
+                    />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid vertical={false} />
+                <XAxis
+                  dataKey="date"
+                  tickLine={false}
+                  axisLine={false}
+                  tickMargin={8}
+                  tickFormatter={(value) => value.slice(4)}
+                />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent indicator="line" />}
+                />
+                <Bar
+                  dataKey="patients"
+                  fill="url(#barGradient)"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            </ChartContainer>
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <UsersIcon className="w-5 h-5" />
-              My Patients
-            </CardTitle>
-            <Button
-              variant="link"
-              size="sm"
-              onClick={() => setActiveSection('patients')}
-              className="text-ehr-blue-600"
-            >
-              View All
-            </Button>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[1, 2, 3].map((i) => (
-                <div key={i} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={`https://ui-avatars.com/api/?name=Patient+${i}&background=10b981&color=fff`}
-                      alt={`Patient ${i}`}
-                      className="w-10 h-10 rounded-full"
-                    />
-                    <div>
-                      <p className="font-medium text-sm">Patient Name {i}</p>
-                      <p className="text-xs text-gray-500">Last visit: Jan {i}, 2026</p>
-                    </div>
-                  </div>
-                  <Button size="sm" variant="outline">
-                    <EyeIcon className="w-4 h-4 mr-1" />
-                    View
-                  </Button>
-                </div>
-              ))}
+        {/* Side Panel - "Quick Actions" */}
+        <div className="space-y-6">
+             <Card className="border-border/50 shadow-sm bg-card h-full">
+                <CardHeader>
+                    <CardTitle className="text-lg">Quick Actions</CardTitle>
+                    <CardDescription>Common administrative tasks</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start gap-4 p-4 h-auto hover:bg-green-50 hover:border-green-200 hover:text-green-700 transition-all group"
+                      onClick={() => {
+                        setActiveSection('patients');
+                        toast.success('Opening patient registration form...');
+                      }}
+                    >
+                        <div className="p-2 bg-green-100 rounded-full text-green-600 group-hover:bg-green-200">
+                             <UserPlus className="w-5 h-5" />
+                        </div>
+                        <div className="text-left">
+                            <div className="font-semibold text-sm">Register Patient</div>
+                            <div className="text-xs text-muted-foreground group-hover:text-green-600/70">Add new profile to blockchain</div>
+                        </div>
+                    </Button>
+
+                    <Button 
+                      variant="outline" 
+                      className="w-full justify-start gap-4 p-4 h-auto hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 transition-all group"
+                      onClick={() => {
+                        setActiveSection('requests');
+                        toast.info('Opening access requests...');
+                      }}
+                    >
+                        <div className="p-2 bg-blue-100 rounded-full text-blue-600 group-hover:bg-blue-200">
+                             <FileKey className="w-5 h-5" />
+                        </div>
+                        <div className="text-left">
+                            <div className="font-semibold text-sm">Request Access</div>
+                            <div className="text-xs text-muted-foreground group-hover:text-blue-600/70">View existing patient records</div>
+                        </div>
+                    </Button>
+
+                     <Button 
+                       variant="outline" 
+                       className="w-full justify-start gap-4 p-4 h-auto hover:bg-purple-50 hover:border-purple-200 hover:text-purple-700 transition-all group"
+                       onClick={() => {
+                         setActiveSection('patients');
+                         toast.info('Search feature coming soon!');
+                       }}
+                     >
+                        <div className="p-2 bg-purple-100 rounded-full text-purple-600 group-hover:bg-purple-200">
+                             <Search className="w-5 h-5" />
+                        </div>
+                        <div className="text-left">
+                            <div className="font-semibold text-sm">Search Directory</div>
+                            <div className="text-xs text-muted-foreground group-hover:text-purple-600/70">Global patient lookup</div>
+                        </div>
+                    </Button>
+                </CardContent>
+             </Card>
+        </div>
+      </div>
+
+      {/* Patient List (Track Order Status style) */}
+      <Card className="border-border/50 shadow-sm overflow-hidden">
+        <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <div>
+                 <CardTitle className="text-lg">Recent Patients</CardTitle>
+                 <CardDescription>Patients accessed or registered recently</CardDescription>
             </div>
-          </CardContent>
+            <div className="flex gap-2">
+                 <Button 
+                   variant="outline" 
+                   size="sm" 
+                   className="gap-2"
+                   onClick={() => toast.info('Opening filter options...')}
+                 >
+                    <Filter className="w-3.5 h-3.5" /> Filter
+                 </Button>
+                 <Button 
+                   variant="outline" 
+                   size="sm" 
+                   className="gap-2"
+                   onClick={() => toast.success('Exporting patient list...')}
+                 >
+                    Export
+                 </Button>
+            </div>
+        </CardHeader>
+        <CardContent className="p-0">
+             <Table>
+                <TableHeader className="bg-muted/30">
+                    <TableRow>
+                        <TableHead className="w-[80px]">ID</TableHead>
+                        <TableHead>Patient Name</TableHead>
+                        <TableHead>Age / Gender</TableHead>
+                        <TableHead>Type</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {MOCK_RECENT_PATIENTS.map((p) => (
+                        <TableRow key={p.id} className="hover:bg-muted/30 cursor-pointer transition-colors">
+                            <TableCell className="font-medium text-muted-foreground">#{1080 + parseInt(p.id)}</TableCell>
+                            <TableCell>
+                                <div className="font-medium text-foreground">{p.name}</div>
+                                <div className="text-xs text-muted-foreground">Last visit: {p.lastVisit}</div>
+                            </TableCell>
+                            <TableCell className="text-foreground">{p.age} • {p.gender}</TableCell>
+                            <TableCell>{p.type}</TableCell>
+                            <TableCell>
+                                <Badge variant="secondary" className={cn(
+                                    "font-normal rounded-full",
+                                    p.status === 'Active' ? "text-green-600 bg-green-50 hover:bg-green-100" : 
+                                    p.status === 'Pending' ? "text-amber-600 bg-amber-50 hover:bg-amber-100" :
+                                    "text-muted-foreground bg-muted hover:bg-muted/80"
+                                )}>
+                                    {p.status}
+                                </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                      <span className="sr-only">Open menu</span>
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end" className="w-48">
+                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                    <DropdownMenuItem 
+                                      className="cursor-pointer"
+                                      onClick={() => toast.success(`Viewing ${p.name}'s details...`)}
+                                    >
+                                      <EyeIcon className="mr-2 h-4 w-4" />
+                                      View Details
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      className="cursor-pointer"
+                                      onClick={() => toast.info(`Editing ${p.name}'s profile...`)}
+                                    >
+                                      <EditIcon className="mr-2 h-4 w-4" />
+                                      Edit Profile
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem 
+                                      className="cursor-pointer"
+                                      onClick={() => toast.info(`Calling ${p.name}...`)}
+                                    >
+                                      <PhoneIcon className="mr-2 h-4 w-4" />
+                                      Contact
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem 
+                                      className="cursor-pointer text-destructive focus:text-destructive"
+                                      onClick={() => toast.error(`Deleting ${p.name}...`)}
+                                    >
+                                      <TrashIcon className="mr-2 h-4 w-4" />
+                                      Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                            </TableCell>
+                        </TableRow>
+                    ))}
+                </TableBody>
+             </Table>
+        </CardContent>
+        <div className="p-4 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+            <p className="text-sm text-muted-foreground">
+              Showing {(currentPage - 1) * recordsPerPage + 1}-{Math.min(currentPage * recordsPerPage, totalRecords)} of {totalRecords} patients
+            </p>
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    className={currentPage === 1 ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+                {[...Array(Math.ceil(totalRecords / recordsPerPage))].map((_, i) => {
+                  const page = i + 1;
+                  if (page === 1 || page === Math.ceil(totalRecords / recordsPerPage) || (page >= currentPage - 1 && page <= currentPage + 1)) {
+                    return (
+                      <PaginationItem key={page}>
+                        <PaginationLink
+                          onClick={() => setCurrentPage(page)}
+                          isActive={currentPage === page}
+                          className="cursor-pointer"
+                        >
+                          {page}
+                        </PaginationLink>
+                      </PaginationItem>
+                    );
+                  } else if (page === currentPage - 2 || page === currentPage + 2) {
+                    return (
+                      <PaginationItem key={page}>
+                        <PaginationEllipsis />
+                      </PaginationItem>
+                    );
+                  }
+                  return null;
+                })}
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => setCurrentPage(prev => Math.min(Math.ceil(totalRecords / recordsPerPage), prev + 1))}
+                    className={currentPage === Math.ceil(totalRecords / recordsPerPage) ? 'pointer-events-none opacity-50' : 'cursor-pointer'}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+        </div>
+      </Card>
+    </div>
+  );
+
+  const renderPatients = () => (
+    <div className="space-y-6">
+        <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold tracking-tight">Patient Directory</h2>
+            <Button 
+              className="bg-green-600 hover:bg-green-700 text-white gap-2"
+              onClick={() => toast.success('Opening patient registration form...')}
+            >
+                <Plus className="w-4 h-4" /> Add Patient
+            </Button>
+        </div>
+        <Card>
+            <CardHeader>
+                <CardDescription>Search and manage all patients in your department.</CardDescription>
+                <div className="pt-4">
+                     <div className="flex gap-2">
+                        <div className="relative flex-1">
+                            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                            <Input placeholder="Search patients by name, ID, or email..." className="pl-9 bg-muted/50 border-none" />
+                        </div>
+                        <Select defaultValue="all">
+                             <SelectTrigger className="w-[180px] bg-muted/50 border-none">
+                                <SelectValue placeholder="Status" />
+                             </SelectTrigger>
+                             <SelectContent>
+                                <SelectItem value="all">All Status</SelectItem>
+                                <SelectItem value="active">Active</SelectItem>
+                                <SelectItem value="inactive">Inactive</SelectItem>
+                             </SelectContent>
+                        </Select>
+                     </div>
+                </div>
+            </CardHeader>
+            <CardContent>
+                 <div className="h-[400px] flex flex-col items-center justify-center text-muted-foreground border-dashed border-2 rounded-lg bg-muted/10">
+                    <Users className="w-10 h-10 mb-2 opacity-50" />
+                    <span className="font-medium">Patient list placeholder</span>
+                    <span className="text-xs opacity-70">Integration with backend pending</span>
+                 </div>
+            </CardContent>
+        </Card>
+    </div>
+  );
+
+  const renderSettings = () => (
+    <div className="space-y-6 animate-in fade-in-50 duration-500">
+      <div className="flex items-center justify-between">
+        <div>
+           <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
+           <p className="text-muted-foreground">Manage your account preferences and dashboard settings.</p>
+        </div>
+      </div>
+      
+      <div className="grid gap-6 md:grid-cols-2">
+        <Card>
+            <CardHeader>
+                <CardTitle>Profile Settings</CardTitle>
+                <CardDescription>Update your personal information.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">Full Name</label>
+                    <Input defaultValue="Admin Staff" />
+                </div>
+                <div className="space-y-2">
+                    <label className="text-sm font-medium">Email Address</label>
+                    <Input defaultValue="staff@hospital.com" />
+                </div>
+                 <div className="space-y-2">
+                    <label className="text-sm font-medium">Role</label>
+                    <Input defaultValue="Senior Administrator" disabled className="bg-muted" />
+                </div>
+                <Button onClick={() => toast.success('Profile updated successfully!')}>Save Changes</Button>
+            </CardContent>
+        </Card>
+
+        <Card>
+            <CardHeader>
+                <CardTitle>Notifications</CardTitle>
+                <CardDescription>Configure how you receive alerts.</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="space-y-0.5">
+                        <div className="text-sm font-medium">Email Notifications</div>
+                        <div className="text-xs text-muted-foreground">Receive daily summaries</div>
+                    </div>
+                     <Button 
+                       variant="outline" 
+                       size="sm"
+                       onClick={() => toast.success('Email notifications disabled')}
+                     >
+                       Enabled
+                     </Button>
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="space-y-0.5">
+                        <div className="text-sm font-medium">New Patient Alerts</div>
+                        <div className="text-xs text-muted-foreground">Notify when patient registers</div>
+                    </div>
+                     <Button 
+                       variant="outline" 
+                       size="sm"
+                       onClick={() => toast.success('Patient alerts disabled')}
+                     >
+                       Enabled
+                     </Button>
+                </div>
+                <div className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="space-y-0.5">
+                        <div className="text-sm font-medium">System Updates</div>
+                        <div className="text-xs text-muted-foreground">Browser notifications for downtime</div>
+                    </div>
+                     <Button 
+                       variant="outline" 
+                       size="sm" 
+                       className="text-muted-foreground"
+                       onClick={() => toast.success('System updates enabled')}
+                     >
+                       Disabled
+                     </Button>
+                </div>
+            </CardContent>
         </Card>
       </div>
     </div>
   );
 
-  // Profile Section
-  const renderProfile = () => (
-    <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="flex items-center gap-2">
-          <UserIcon className="w-5 h-5" />
-          My Profile
-        </CardTitle>
-        {!isEditingProfile && (
-          <Button onClick={() => setIsEditingProfile(true)}>
-            <EditIcon className="w-4 h-4 mr-2" />
-            Edit Profile
-          </Button>
-        )}
-      </CardHeader>
-      <CardContent>
-        <form className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input id="fullName" defaultValue="Jane Doe" disabled={!isEditingProfile} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" defaultValue="staff@test.com" disabled={!isEditingProfile} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="department" className="flex items-center gap-2">
-                <BuildingIcon className="w-4 h-4" />
-                Department
-              </Label>
-              <Select disabled={!isEditingProfile}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Nursing" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Emergency">Emergency</SelectItem>
-                  <SelectItem value="Administration">Administration</SelectItem>
-                  <SelectItem value="Nursing">Nursing</SelectItem>
-                  <SelectItem value="Laboratory">Laboratory</SelectItem>
-                  <SelectItem value="Radiology">Radiology</SelectItem>
-                  <SelectItem value="Pharmacy">Pharmacy</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="employeeId" className="flex items-center gap-2">
-                <IdCardIcon className="w-4 h-4" />
-                Employee ID
-              </Label>
-              <Input id="employeeId" defaultValue="EMP-789012" disabled={!isEditingProfile} />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" type="tel" defaultValue="+1234567890" disabled={!isEditingProfile} />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="hospital">Hospital / Facility</Label>
-              <Input id="hospital" defaultValue="City General Hospital" disabled={!isEditingProfile} />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="address">Address</Label>
-            <Textarea id="address" rows={3} defaultValue="789 Healthcare Ave, City, State, ZIP" disabled={!isEditingProfile} />
-          </div>
-
-          {isEditingProfile && (
-            <div className="flex gap-3">
-              <Button type="button" onClick={() => setIsEditingProfile(false)}>
-                <SaveIcon className="w-4 h-4 mr-2" />
-                Save Changes
-              </Button>
-              <Button type="button" variant="secondary" onClick={() => setIsEditingProfile(false)}>
-                <XIcon className="w-4 h-4 mr-2" />
-                Cancel
-              </Button>
-            </div>
-          )}
-        </form>
-      </CardContent>
-    </Card>
-  );
-
-  // My Patients Section
-  const renderPatients = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <UsersIcon className="w-5 h-5" />
-          My Patients
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-4">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <img
-                    src={`https://ui-avatars.com/api/?name=Patient+${i}&background=10b981&color=fff`}
-                    alt={`Patient ${i}`}
-                    className="w-12 h-12 rounded-full"
-                  />
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Patient Name {i}</h3>
-                    <p className="text-sm text-gray-500">Last accessed: Jan {i}, 2026</p>
-                  </div>
-                </div>
-                <Button size="sm" onClick={() => setActiveSection('records')}>
-                  <FileTextIcon className="w-4 h-4 mr-2" />
-                  View Records
-                </Button>
-              </div>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  // Request Access Section
-  const renderRequest = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <UserPlusIcon className="w-5 h-5" />
-          Request Patient Access
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        <form className="space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="patientSearch">Search Patient</Label>
-            <div className="relative">
-              <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-              <Input
-                id="patientSearch"
-                placeholder="Enter patient email or wallet address"
-                value={searchPatient}
-                onChange={(e) => setSearchPatient(e.target.value)}
-                className="pl-10"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="requestReason">Reason for Access</Label>
-            <Textarea
-              id="requestReason"
-              rows={4}
-              placeholder="Explain why you need access to this patient's records..."
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="accessDuration">Access Duration</Label>
-            <Select>
-              <SelectTrigger>
-                <SelectValue placeholder="Select duration" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="7">7 Days</SelectItem>
-                <SelectItem value="30">30 Days</SelectItem>
-                <SelectItem value="90">90 Days</SelectItem>
-                <SelectItem value="365">1 Year</SelectItem>
-                <SelectItem value="unlimited">Unlimited</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <Button type="submit">
-            <UserPlusIcon className="w-4 h-4 mr-2" />
-            Send Access Request
-          </Button>
-        </form>
-
-        {/* Pending Requests */}
-        <div className="mt-8">
-          <h3 className="font-semibold text-gray-900 mb-4">Pending Requests</h3>
-          <div className="space-y-3">
-            {[1, 2].map((i) => (
-              <div key={i} className="p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-medium">Request to Patient {i}</p>
-                    <p className="text-xs text-gray-500">Sent {i} day{i > 1 ? 's' : ''} ago</p>
-                  </div>
-                  <span className="text-xs px-2 py-1 bg-orange-100 text-orange-700 rounded-full">
-                    Pending
-                  </span>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-
-  // Patient Records Section
-  const renderRecords = () => (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileTextIcon className="w-5 h-5" />
-          Patient Records
-        </CardTitle>
-      </CardHeader>
-      <CardContent>
-        {/* Patient Selector */}
-        <div className="mb-6">
-          <Label htmlFor="selectPatient">Select Patient</Label>
-          <Select>
-            <SelectTrigger>
-              <SelectValue placeholder="Choose a patient" />
-            </SelectTrigger>
-            <SelectContent>
-              {[1, 2, 3, 4, 5].map((i) => (
-                <SelectItem key={i} value={`patient-${i}`}>
-                  Patient Name {i}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Records Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="p-4 border border-gray-200 rounded-lg hover:shadow-md transition-shadow">
-              <div className="flex items-start justify-between mb-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <FileIcon className="w-5 h-5 text-blue-600" />
-                </div>
-                <span className="text-xs px-2 py-1 bg-green-100 text-green-700 rounded-full">
-                  Lab Results
-                </span>
-              </div>
-              <h3 className="font-semibold text-gray-900 mb-1">Medical Record {i}</h3>
-              <p className="text-xs text-gray-500 mb-3">Uploaded on Jan {10 + i}, 2026</p>
-              <Button size="sm" variant="outline" className="w-full">
-                <EyeIcon className="w-4 h-4 mr-2" />
-                View Record
-              </Button>
-            </div>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  );
-
+  // Content Renderer
   const renderContent = () => {
     switch (activeSection) {
-      case 'dashboard':
-        return renderDashboard();
-      case 'profile':
-        return renderProfile();
-      case 'patients':
-        return renderPatients();
-      case 'request':
-        return renderRequest();
-      case 'records':
-        return renderRecords();
-      default:
-        return renderDashboard();
+      case 'dashboard': return renderOverview();
+      case 'patients': return renderPatients();
+      case 'requests': return <div className="p-8 text-center text-muted-foreground">Access Requests Module (Coming Soon)</div>;
+      case 'settings': return renderSettings();
+      default: return renderOverview();
     }
   };
 
   return (
     <DashboardLayout
-      userName="Jane Doe"
-      walletAddress="0x9ABC...DEF0"
+      userName="Staff Member"
+      walletAddress="0x71C...9A21"
       navItems={navItems}
       activeSection={activeSection}
       onSectionChange={setActiveSection}
-      pageTitle={getSectionTitle()}
+      breadcrumbs={getBreadcrumbs()}
     >
       {renderContent()}
     </DashboardLayout>
@@ -492,4 +609,3 @@ const StaffDashboard = () => {
 };
 
 export default StaffDashboard;
-

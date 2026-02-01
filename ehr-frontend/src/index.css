@@ -56,7 +56,7 @@
   --card-foreground: #333333;
   --popover: #ffffff;
   --popover-foreground: #333333;
-  --primary: #e05d38;
+  --primary: #90E0EF;
   --primary-foreground: #ffffff;
   --secondary: #f3f4f6;
   --secondary-foreground: #4b5563;
@@ -64,15 +64,15 @@
   --muted-foreground: #6b7280;
   --accent: #d6e4f0;
   --accent-foreground: #1e3a8a;
-  --destructive: #ef4444;
+  --destructive: #90E0EF;
   --destructive-foreground: #ffffff;
   --border: #dcdfe2;
   --input: #f4f5f7;
-  --ring: #e05d38;
+  --ring: #90E0EF;
   
   /* Charts */
   --chart-1: #86a7c8;
-  --chart-2: #eea591;
+  --chart-2: #90E0EF;
   --chart-3: #5a7ca6;
   --chart-4: #466494;
   --chart-5: #334c82;
@@ -80,12 +80,12 @@
   /* Sidebar - Clean white to match cards */
   --sidebar: #ffffff;
   --sidebar-foreground: #333333;
-  --sidebar-primary: #e05d38;
+  --sidebar-primary: #90E0EF;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(224, 93, 56, 0.1);
-  --sidebar-accent-foreground: #e05d38;
+  --sidebar-accent: rgba(144, 224, 239, 0.1);
+  --sidebar-accent-foreground: #90E0EF;
   --sidebar-border: #f0f0f0;
-  --sidebar-ring: #e05d38;
+  --sidebar-ring: #90E0EF;
 }
 
 .dark {
@@ -96,7 +96,7 @@
   --card-foreground: #f1f5f9;
   --popover: #1a2332;
   --popover-foreground: #f1f5f9;
-  --primary: #e05d38;
+  --primary: #90E0EF;
   --primary-foreground: #ffffff;
   --secondary: #2a3444;
   --secondary-foreground: #e2e8f0;
@@ -104,28 +104,28 @@
   --muted-foreground: #94a3b8;
   --accent: #2a3444;
   --accent-foreground: #f1f5f9;
-  --destructive: #dc2626;
+  --destructive: #90E0EF;
   --destructive-foreground: #fef2f2;
   --border: #334155;
   --input: #2a3444;
-  --ring: #e05d38;
+  --ring: #90E0EF;
   
   /* Charts (Dark) */
-  --chart-1: #e05d38;
+  --chart-1: #90E0EF;
   --chart-2: #38bdf8;
   --chart-3: #a78bfa;
   --chart-4: #34d399;
-  --chart-5: #fb923c;
+  --chart-5: #90E0EF;
   
   /* Sidebar (Dark) - Slightly elevated */
   --sidebar: #141c27;
   --sidebar-foreground: #f1f5f9;
-  --sidebar-primary: #e05d38;
+  --sidebar-primary: #90E0EF;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: rgba(224, 93, 56, 0.15);
-  --sidebar-accent-foreground: #e05d38;
+  --sidebar-accent: rgba(144, 224, 239, 0.15);
+  --sidebar-accent-foreground: #90E0EF;
   --sidebar-border: #2a3444;
-  --sidebar-ring: #e05d38;
+  --sidebar-ring: #90E0EF;
 }
 
 @layer base {
@@ -163,11 +163,11 @@
   }
   
   .gradient-primary {
-    background: linear-gradient(135deg, #e05d38 0%, #f97316 100%);
+    background: linear-gradient(135deg, #90E0EF 0%, #48CAE4 100%);
   }
   
   .gradient-text {
-    background: linear-gradient(135deg, #e05d38 0%, #f97316 100%);
+    background: linear-gradient(135deg, #90E0EF 0%, #48CAE4 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -179,7 +179,7 @@
   
   .hover-lift:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 40px -10px rgba(224, 93, 56, 0.3);
+    box-shadow: 0 10px 40px -10px rgba(144, 224, 239, 0.3);
   }
   
   .animate-float {
@@ -196,15 +196,15 @@
   }
   
   @keyframes pulse-glow {
-    0%, 100% { box-shadow: 0 0 20px rgba(224, 93, 56, 0.3); }
-    50% { box-shadow: 0 0 40px rgba(224, 93, 56, 0.6); }
+    0%, 100% { box-shadow: 0 0 20px rgba(144, 224, 239, 0.3); }
+    50% { box-shadow: 0 0 40px rgba(144, 224, 239, 0.6); }
   }
   
   /* Mesh gradient background */
   .mesh-gradient {
     background: 
-      radial-gradient(at 40% 20%, rgba(224, 93, 56, 0.1) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, rgba(251, 146, 60, 0.08) 0px, transparent 50%),
+      radial-gradient(at 40% 20%, rgba(144, 224, 239, 0.1) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(72, 202, 228, 0.08) 0px, transparent 50%),
       radial-gradient(at 0% 50%, rgba(56, 189, 248, 0.05) 0px, transparent 50%),
       radial-gradient(at 80% 50%, rgba(167, 139, 250, 0.05) 0px, transparent 50%),
       radial-gradient(at 0% 100%, rgba(52, 211, 153, 0.05) 0px, transparent 50%);
@@ -212,8 +212,8 @@
   
   .dark .mesh-gradient {
     background: 
-      radial-gradient(at 40% 20%, rgba(224, 93, 56, 0.15) 0px, transparent 50%),
-      radial-gradient(at 80% 0%, rgba(251, 146, 60, 0.1) 0px, transparent 50%),
+      radial-gradient(at 40% 20%, rgba(144, 224, 239, 0.15) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(72, 202, 228, 0.1) 0px, transparent 50%),
       radial-gradient(at 0% 50%, rgba(56, 189, 248, 0.08) 0px, transparent 50%),
       radial-gradient(at 80% 50%, rgba(167, 139, 250, 0.08) 0px, transparent 50%),
       radial-gradient(at 0% 100%, rgba(52, 211, 153, 0.08) 0px, transparent 50%);

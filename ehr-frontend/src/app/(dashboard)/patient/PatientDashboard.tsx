@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import DashboardLayout from '@/components/app/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -63,33 +63,230 @@ import { StatsCard } from '@/components/dashboard/StatsCard';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useFetchApi, useApi } from '@/hooks/useApi';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  dashboardService,
+  accessRequestsService,
+  recordsService,
+  permissionsService,
+  auditLogService,
+  profileService,
+} from '@/services/api';
+import type { PatientProfile } from '@/types/api.types';
 
 const PatientDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('all');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadFormData, setUploadFormData] = useState({
+    title: '',
+    recordType: '',
+    recordDate: '',
+    description: '',
+  });
 
-  // Mock user data - In production, fetched from /profile endpoint
-  const currentUser = {
-    id: '1',
-    fullName: 'John Doe',
-    email: 'patient@test.com',
-    phone: '+1234567890',
-    dateOfBirth: '1990-01-15',
-    gender: 'male',
-    bloodGroup: 'O+',
-    address: '123 Main St, City, State 12345',
-    blockchainAddress: '0x1234...5678',
+  const { user } = useAuth();
+
+  // Fetch patient profile
+  const {
+    data: profileData,
+    loading: profileLoading,
+    refetch: refetchProfile,
+  } = useFetchApi(() => profileService.getMyPatientProfile(), []);
+
+  // Fetch dashboard data
+  const {
+    data: dashboardData,
+    loading: dashboardLoading,
+    refetch: refetchDashboard,
+  } = useFetchApi(() => dashboardService.getPatientDashboard(), []);
+
+  // Fetch medical records
+  const {
+    data: recordsData,
+    loading: recordsLoading,
+    refetch: refetchRecords,
+  } = useFetchApi(() => recordsService.getMyRecords(), []);
+
+  // Fetch access requests
+  const {
+    data: accessRequestsData,
+    loading: accessRequestsLoading,
+    refetch: refetchAccessRequests,
+  } = useFetchApi(() => accessRequestsService.getMyAccessRequests(), []);
+
+  // Fetch permissions
+  const {
+    data: permissionsData,
+    loading: permissionsLoading,
+    refetch: refetchPermissions,
+  } = useFetchApi(() => permissionsService.getMyPermissions(), []);
+
+  // Fetch audit logs
+  const {
+    data: auditLogData,
+    loading: auditLogLoading,
+    refetch: refetchAuditLog,
+  } = useFetchApi(() => auditLogService.getMyAuditLog(), []);
+
+  // API mutations
+  const approveRequestApi = useApi(accessRequestsService.approveRequest);
+  const denyRequestApi = useApi(accessRequestsService.denyRequest);
+  const revokePermissionApi = useApi(permissionsService.revokePermission);
+  const deleteRecordApi = useApi(recordsService.deleteRecord);
+  const uploadRecordApi = useApi(recordsService.uploadRecord);
+  const updateProfileApi = useApi(profileService.updateMyPatientProfile);
+
+  const currentUser = profileData?.data
+    ? {
+        id: profileData.data.id,
+        fullName: user?.fullName || '',
+        email: user?.email || '',
+        phone: profileData.data.emergencyContact || '',
+        dateOfBirth: profileData.data.dateOfBirth || '',
+        gender: profileData.data.gender || '',
+        bloodGroup: profileData.data.bloodType || '',
+        address: profileData.data.address || '',
+        blockchainAddress: user?.blockchainAddress || '',
+      }
+    : {
+        id: '',
+        fullName: user?.fullName || '',
+        email: user?.email || '',
+        phone: '',
+        dateOfBirth: '',
+        gender: '',
+        bloodGroup: '',
+        address: '',
+        blockchainAddress: user?.blockchainAddress || '',
+      };
+
+  const stats = dashboardData?.data
+    ? {
+        totalRecords: dashboardData.data.cards.totalRecords,
+        authorizedUsers: dashboardData.data.cards.authorizedUsers,
+        pendingRequests: dashboardData.data.cards.pendingRequests,
+        recentActivity: dashboardData.data.recentActivities?.length || 0,
+        recordsThisMonth: 0,
+      }
+    : {
+        totalRecords: 0,
+        authorizedUsers: 0,
+        pendingRequests: 0,
+        recentActivity: 0,
+        recordsThisMonth: 0,
+      };
+
+  const medicalRecords = recordsData?.data || [];
+  const accessRequests = accessRequestsData?.data || [];
+  const permissions = permissionsData?.data || [];
+  const auditLogs = auditLogData?.data?.entries || [];
+
+  // Action handlers
+  const handleApproveRequest = async (requesterAddress: string, requesterName: string) => {
+    try {
+      await approveRequestApi.execute(requesterAddress);
+      toast.success(`Approved access for ${requesterName}`);
+      refetchAccessRequests();
+      refetchPermissions();
+      refetchDashboard();
+      refetchAuditLog();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to approve request');
+    }
   };
 
-  // Stats - From /dashboard/patient endpoint
-  const stats = {
-    totalRecords: 24,
-    authorizedUsers: 5,
-    pendingRequests: 3,
-    recentActivity: 12,
-    recordsThisMonth: 8,
+  const handleDenyRequest = async (requesterAddress: string, requesterName: string) => {
+    try {
+      await denyRequestApi.execute(requesterAddress);
+      toast.error(`Denied access for ${requesterName}`);
+      refetchAccessRequests();
+      refetchDashboard();
+      refetchAuditLog();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to deny request');
+    }
+  };
+
+  const handleRevokePermission = async (userAddress: string, userName: string) => {
+    try {
+      await revokePermissionApi.execute(userAddress);
+      toast.info(`Revoked access for ${userName}`);
+      refetchPermissions();
+      refetchDashboard();
+      refetchAuditLog();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to revoke permission');
+    }
+  };
+
+  const handleDeleteRecord = async (recordId: string) => {
+    try {
+      await deleteRecordApi.execute(recordId);
+      toast.success('Record deleted successfully');
+      refetchRecords();
+      refetchDashboard();
+      refetchAuditLog();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to delete record');
+    }
+  };
+
+  const handleUploadRecord = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedFile) {
+      toast.error('Please select a file');
+      return;
+    }
+    if (!uploadFormData.title || !uploadFormData.recordType || !uploadFormData.recordDate) {
+      toast.error('Please fill all required fields');
+      return;
+    }
+
+    try {
+      await uploadRecordApi.execute({
+        title: uploadFormData.title,
+        recordType: uploadFormData.recordType,
+        recordDate: uploadFormData.recordDate,
+        description: uploadFormData.description,
+        file: selectedFile,
+      });
+      toast.success('Record uploaded successfully!');
+      setActiveSection('records');
+      setSelectedFile(null);
+      setUploadFormData({
+        title: '',
+        recordType: '',
+        recordDate: '',
+        description: '',
+      });
+      refetchRecords();
+      refetchDashboard();
+      refetchAuditLog();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to upload record');
+    }
+  };
+
+  const handleUpdateProfile = async () => {
+    try {
+      const updatedData: Partial<PatientProfile> = {
+        dateOfBirth: currentUser.dateOfBirth,
+        gender: currentUser.gender,
+        bloodType: currentUser.bloodGroup,
+        address: currentUser.address,
+        emergencyContact: currentUser.phone,
+      };
+      await updateProfileApi.execute(updatedData);
+      toast.success('Profile updated successfully!');
+      setIsEditingProfile(false);
+      refetchProfile();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update profile');
+    }
   };
 
   // Navigation items
@@ -130,129 +327,6 @@ const PatientDashboard = () => {
       label: 'My Profile',
       icon: <UserIcon className="w-5 h-5" />,
       section: 'profile',
-    },
-  ];
-
-  // Mock data - In production from respective API endpoints
-  const medicalRecords = [
-    {
-      id: '1',
-      title: 'Blood Test Results',
-      type: 'lab',
-      description: 'Complete Blood Count (CBC)',
-      uploadedAt: '2026-01-20T10:30:00Z',
-      uploadedBy: 'Dr. Sarah Smith',
-      fileSize: '245 KB',
-      encrypted: true,
-      hash: '0xabc...def',
-    },
-    {
-      id: '2',
-      title: 'X-Ray - Chest',
-      type: 'imaging',
-      description: 'Chest X-ray examination',
-      uploadedAt: '2026-01-18T14:15:00Z',
-      uploadedBy: 'Dr. Michael Johnson',
-      fileSize: '1.2 MB',
-      encrypted: true,
-      hash: '0x123...456',
-    },
-    {
-      id: '3',
-      title: 'Prescription - Antibiotics',
-      type: 'prescription',
-      description: 'Amoxicillin 500mg',
-      uploadedAt: '2026-01-15T09:00:00Z',
-      uploadedBy: 'Dr. Sarah Smith',
-      fileSize: '156 KB',
-      encrypted: true,
-      hash: '0x789...abc',
-    },
-  ];
-
-  const accessRequests = [
-    {
-      id: '1',
-      requesterName: 'Dr. Sarah Smith',
-      requesterSpecialty: 'Cardiologist',
-      requesterAddress: '0x5678...9ABC',
-      reason: 'Follow-up consultation for cardiac evaluation',
-      duration: '30 days',
-      requestedAt: '2026-01-24T08:00:00Z',
-      status: 'pending',
-    },
-    {
-      id: '2',
-      requesterName: 'Dr. Michael Johnson',
-      requesterSpecialty: 'Radiologist',
-      requesterAddress: '0xDEF0...1234',
-      reason: 'Review imaging results',
-      duration: '7 days',
-      requestedAt: '2026-01-23T14:30:00Z',
-      status: 'pending',
-    },
-    {
-      id: '3',
-      requesterName: 'Dr. Emily Chen',
-      requesterSpecialty: 'General Physician',
-      requesterAddress: '0x9876...5432',
-      reason: 'Annual checkup',
-      duration: '14 days',
-      requestedAt: '2026-01-20T10:00:00Z',
-      status: 'approved',
-    },
-  ];
-
-  const permissions = [
-    {
-      id: '1',
-      userName: 'Dr. Sarah Smith',
-      userRole: 'Doctor',
-      userAddress: '0x5678...9ABC',
-      grantedAt: '2026-01-15T10:00:00Z',
-      expiresAt: '2026-02-15T10:00:00Z',
-      status: 'active',
-      accessCount: 12,
-    },
-    {
-      id: '2',
-      userName: 'Nurse Jane Doe',
-      userRole: 'Staff',
-      userAddress: '0xABCD...EF12',
-      grantedAt: '2026-01-10T09:00:00Z',
-      expiresAt: '2026-02-10T09:00:00Z',
-      status: 'active',
-      accessCount: 5,
-    },
-  ];
-
-  const auditLogs = [
-    {
-      id: '1',
-      action: 'Record Uploaded',
-      type: 'upload',
-      performedBy: 'You',
-      timestamp: 1768818600, // example timestamp
-      details: 'Blood Test Results uploaded',
-      txHash: '0xabc...def',
-    },
-    {
-      id: '2',
-      action: 'Access Granted',
-      type: 'permission',
-      performedBy: 'You',
-      timestamp: 1768384800,
-      details: 'Granted to Dr. Sarah Smith',
-      txHash: '0x123...456',
-    },
-    {
-      id: '3',
-      action: 'Record Accessed',
-      type: 'access',
-      performedBy: 'Dr. Sarah Smith',
-      timestamp: 1768486800,
-      details: 'Viewed Blood Test Results',
-      txHash: '0x789...abc',
     },
   ];
 
@@ -336,13 +410,25 @@ const PatientDashboard = () => {
 
   const getStatusBadge = (status: string) => {
     const config: Record<string, { label: string; className: string }> = {
+      PENDING: {
+        label: 'Pending',
+        className: 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20',
+      },
       pending: {
         label: 'Pending',
         className: 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20',
       },
+      APPROVED: {
+        label: 'Approved',
+        className: 'bg-green-500/10 text-green-500 hover:bg-green-500/20',
+      },
       approved: {
         label: 'Approved',
         className: 'bg-green-500/10 text-green-500 hover:bg-green-500/20',
+      },
+      DENIED: {
+        label: 'Denied',
+        className: 'bg-red-500/10 text-red-500 hover:bg-red-500/20',
       },
       denied: {
         label: 'Denied',
@@ -361,7 +447,7 @@ const PatientDashboard = () => {
         className: 'bg-red-500/10 text-red-500 hover:bg-red-500/20',
       },
     };
-    const { label, className } = config[status] || config.pending;
+    const { label, className } = config[status] || config.PENDING;
     return (
       <Badge variant="outline" className={cn('border-none', className)}>
         {label}
@@ -373,36 +459,51 @@ const PatientDashboard = () => {
   const renderDashboard = () => (
     <div className="space-y-6 animate-in fade-in-50 duration-500">
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatsCard
-          title="Total Records"
-          value={stats.totalRecords}
-          icon={FileIcon}
-          description={`+${stats.recordsThisMonth} this month`}
-          trend={{ value: stats.recordsThisMonth, label: 'new this month', trend: 'up' }}
-          variant="gradient"
-        />
-        <StatsCard
-          title="Authorized Users"
-          value={stats.authorizedUsers}
-          icon={UserCheckIcon}
-          description="Active permissions"
-          trend={{ value: 1, label: 'new access', trend: 'up' }}
-        />
-        <StatsCard
-          title="Pending Requests"
-          value={stats.pendingRequests}
-          icon={ClockIcon}
-          description="Awaiting review"
-          trend={{ value: 2, label: 'since yesterday', trend: 'neutral' }}
-        />
-        <StatsCard
-          title="Recent Activity"
-          value={stats.recentActivity}
-          icon={ActivityIcon}
-          description="Last 30 days"
-        />
-      </div>
+      {dashboardLoading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="h-32 bg-muted/30 rounded-lg animate-pulse"
+            ></div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatsCard
+            title="Total Records"
+            value={stats.totalRecords}
+            icon={FileIcon}
+            description={`+${stats.recordsThisMonth} this month`}
+            trend={{
+              value: stats.recordsThisMonth,
+              label: 'new this month',
+              trend: 'up',
+            }}
+            variant="gradient"
+          />
+          <StatsCard
+            title="Authorized Users"
+            value={stats.authorizedUsers}
+            icon={UserCheckIcon}
+            description="Active permissions"
+            trend={{ value: 1, label: 'new access', trend: 'up' }}
+          />
+          <StatsCard
+            title="Pending Requests"
+            value={stats.pendingRequests}
+            icon={ClockIcon}
+            description="Awaiting review"
+            trend={{ value: 2, label: 'since yesterday', trend: 'neutral' }}
+          />
+          <StatsCard
+            title="Recent Activity"
+            value={stats.recentActivity}
+            icon={ActivityIcon}
+            description="Last 30 days"
+          />
+        </div>
+      )}
 
       {/* Activity and Requests */}
       <div className="grid grid-cols-1 lg:grid-cols-7 gap-6">
@@ -414,7 +515,13 @@ const PatientDashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <ActivityFeed activities={auditLogs as any} maxItems={5} className="pr-0" />
+            {auditLogLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <ActivityFeed activities={auditLogs as any} maxItems={5} className="pr-0" />
+            )}
           </CardContent>
         </Card>
 
@@ -433,58 +540,82 @@ const PatientDashboard = () => {
             </div>
           </CardHeader>
           <CardContent>
-            <ScrollArea className="h-[300px] pr-4">
+            {accessRequestsLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <ScrollArea className="h-[300px] pr-4">
                 <div className="space-y-4">
-                {accessRequests
-                    .filter((r) => r.status === 'pending')
+                  {accessRequests
+                    .filter((r) => r.status === 'PENDING')
                     .slice(0, 3)
                     .map((req) => (
-                    <div
+                      <div
                         key={req.id}
                         className="p-4 bg-muted/30 border border-muted/40 rounded-xl"
-                    >
+                      >
                         <div className="flex items-start gap-3 mb-3">
-                        <Avatar>
-                            <AvatarImage src={`https://ui-avatars.com/api/?name=${encodeURIComponent(req.requesterName)}&background=random`} />
-                            <AvatarFallback>{req.requesterName.charAt(0)}</AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1 min-w-0">
+                          <Avatar>
+                            <AvatarImage
+                              src={`https://ui-avatars.com/api/?name=${encodeURIComponent(req.requesterName || 'Unknown')}&background=random`}
+                            />
+                            <AvatarFallback>
+                              {(req.requesterName || 'U').charAt(0)}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
                             <p className="font-semibold text-sm truncate">
-                            {req.requesterName}
+                              {req.requesterName || 'Unknown'}
                             </p>
-                            <p className="text-xs text-muted-foreground">{req.requesterSpecialty}</p>
-                        </div>
+                            <p className="text-xs text-muted-foreground">
+                              {req.requesterSpecialty || req.requesterRole || 'Healthcare Professional'}
+                            </p>
+                          </div>
                         </div>
                         <p className="text-xs text-muted-foreground mb-3 line-clamp-2">
-                        {req.reason}
+                          {req.reason || 'Access request'}
                         </p>
                         <div className="flex gap-2">
-                        <Button
+                          <Button
                             size="sm"
                             className="flex-1 h-8"
-                            onClick={() => toast.success(`Approved ${req.requesterName}`)}
-                        >
+                            onClick={() =>
+                              handleApproveRequest(
+                                req.requesterAddress,
+                                req.requesterName || 'User'
+                              )
+                            }
+                            disabled={approveRequestApi.loading}
+                          >
                             Approve
-                        </Button>
-                        <Button
+                          </Button>
+                          <Button
                             size="sm"
                             variant="outline"
                             className="flex-1 h-8 text-destructive hover:text-destructive"
-                            onClick={() => toast.error(`Denied ${req.requesterName}`)}
-                        >
+                            onClick={() =>
+                              handleDenyRequest(
+                                req.requesterAddress,
+                                req.requesterName || 'User'
+                              )
+                            }
+                            disabled={denyRequestApi.loading}
+                          >
                             Deny
-                        </Button>
+                          </Button>
                         </div>
-                    </div>
+                      </div>
                     ))}
-                    {accessRequests.filter((r) => r.status === 'pending').length === 0 && (
-                        <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
-                             <CheckCircle2Icon className="h-8 w-8 mb-2 opacity-50" />
-                             <p className="text-sm">No pending requests</p>
-                        </div>
-                    )}
+                  {accessRequests.filter((r) => r.status === 'PENDING').length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground">
+                      <CheckCircle2Icon className="h-8 w-8 mb-2 opacity-50" />
+                      <p className="text-sm">No pending requests</p>
+                    </div>
+                  )}
                 </div>
-            </ScrollArea>
+              </ScrollArea>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -505,14 +636,24 @@ const PatientDashboard = () => {
             Edit Profile
           </Button>
         ) : (
-             <div className="flex gap-2">
-                 <Button variant="outline" onClick={() => setIsEditingProfile(false)}>
-                    Cancel
-                 </Button>
-                 <Button onClick={() => { setIsEditingProfile(false); toast.success('Profile updated!'); }}>
-                     Save Changes
-                 </Button>
-            </div>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setIsEditingProfile(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleUpdateProfile}
+              disabled={updateProfileApi.loading}
+            >
+              {updateProfileApi.loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Saving...
+                </>
+              ) : (
+                <>Save Changes</>
+              )}
+            </Button>
+          </div>
         )}
       </CardHeader>
       <CardContent className="pt-6">
@@ -673,60 +814,87 @@ const PatientDashboard = () => {
             </Select>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {medicalRecords.map((record) => (
-              <Card
-                key={record.id}
-                className="border-muted/40 hover:border-primary/50 transition-all cursor-pointer group"
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="p-2 bg-primary/10 rounded-lg text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
-                      <FileIcon className="w-5 h-5" />
-                    </div>
-                    {getRecordTypeBadge(record.type)}
-                  </div>
-                  <CardTitle className="text-base line-clamp-1">{record.title}</CardTitle>
-                  <CardDescription className="line-clamp-2 text-xs">
-                    {record.description}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <div className="space-y-1 text-xs text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                      <CalendarIcon className="w-3 h-3" />
-                      <span>{formatDate(record.uploadedAt)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <UserIcon className="w-3 h-3" />
-                      <span>By: {record.uploadedBy}</span>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2 p-1.5 bg-green-500/10 rounded border border-green-500/20">
-                    <ShieldCheckIcon className="w-3 h-3 text-green-600 dark:text-green-400" />
-                    <span className="text-[10px] font-medium text-green-700 dark:text-green-400">
-                      AES-128 Encrypted
-                    </span>
-                  </div>
-                  <div className="flex gap-2 pt-2">
-                    <Button size="sm" variant="outline" className="flex-1 h-8">
-                      View
-                    </Button>
-                    <Button size="icon" variant="ghost" className="h-8 w-8">
-                      <DownloadIcon className="w-4 h-4" />
-                    </Button>
-                    <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
-                    >
-                      <TrashIcon className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          {recordsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          ) : medicalRecords.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <FileIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No medical records found</p>
+              <Button className="mt-4" onClick={() => setActiveSection('upload')}>
+                <UploadIcon className="w-4 h-4 mr-2" />
+                Upload First Record
+              </Button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {medicalRecords
+                .filter(
+                  (record) =>
+                    filterType === 'all' || record.recordType === filterType
+                )
+                .filter((record) =>
+                  record.title.toLowerCase().includes(searchQuery.toLowerCase())
+                )
+                .map((record) => (
+                  <Card
+                    key={record.id}
+                    className="border-muted/40 hover:border-primary/50 transition-all cursor-pointer group"
+                  >
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="p-2 bg-primary/10 rounded-lg text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                          <FileIcon className="w-5 h-5" />
+                        </div>
+                        {getRecordTypeBadge(record.recordType)}
+                      </div>
+                      <CardTitle className="text-base line-clamp-1">
+                        {record.title}
+                      </CardTitle>
+                      <CardDescription className="line-clamp-2 text-xs">
+                        {record.description || 'No description'}
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      <div className="space-y-1 text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <CalendarIcon className="w-3 h-3" />
+                          <span>{formatDate(record.uploadedAt)}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <UserIcon className="w-3 h-3" />
+                          <span>By: You</span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 p-1.5 bg-green-500/10 rounded border border-green-500/20">
+                        <ShieldCheckIcon className="w-3 h-3 text-green-600 dark:text-green-400" />
+                        <span className="text-[10px] font-medium text-green-700 dark:text-green-400">
+                          AES-128 Encrypted
+                        </span>
+                      </div>
+                      <div className="flex gap-2 pt-2">
+                        <Button size="sm" variant="outline" className="flex-1 h-8">
+                          View
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-8 w-8">
+                          <DownloadIcon className="w-4 h-4" />
+                        </Button>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+                          onClick={() => handleDeleteRecord(record.id)}
+                          disabled={deleteRecordApi.loading}
+                        >
+                          <TrashIcon className="w-4 h-4" />
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>
@@ -745,39 +913,52 @@ const PatientDashboard = () => {
         </CardDescription>
       </CardHeader>
       <CardContent className="pt-6">
-        <form
-          className="space-y-6"
-          onSubmit={(e) => {
-            e.preventDefault();
-            toast.success('Record uploaded!');
-          }}
-        >
+        <form className="space-y-6" onSubmit={handleUploadRecord}>
           <div className="space-y-2">
             <Label htmlFor="recordTitle">Record Title *</Label>
             <Input
               id="recordTitle"
               placeholder="e.g., Blood Test - Jan 2026"
               required
+              value={uploadFormData.title}
+              onChange={(e) =>
+                setUploadFormData({ ...uploadFormData, title: e.target.value })
+              }
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
               <Label htmlFor="recordType">Record Type *</Label>
-              <Select>
+              <Select
+                value={uploadFormData.recordType}
+                onValueChange={(value) =>
+                  setUploadFormData({ ...uploadFormData, recordType: value })
+                }
+              >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="lab">Lab Results</SelectItem>
-                  <SelectItem value="prescription">Prescription</SelectItem>
-                  <SelectItem value="imaging">Imaging/X-Ray</SelectItem>
-                  <SelectItem value="diagnosis">Diagnosis</SelectItem>
+                  <SelectItem value="LAB_RESULTS">Lab Results</SelectItem>
+                  <SelectItem value="PRESCRIPTION">Prescription</SelectItem>
+                  <SelectItem value="IMAGING">Imaging/X-Ray</SelectItem>
+                  <SelectItem value="DIAGNOSIS">Diagnosis</SelectItem>
+                  <SelectItem value="VACCINATION">Vaccination</SelectItem>
+                  <SelectItem value="OTHER">Other</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="recordDate">Record Date *</Label>
-              <Input id="recordDate" type="date" required />
+              <Input
+                id="recordDate"
+                type="date"
+                required
+                value={uploadFormData.recordDate}
+                onChange={(e) =>
+                  setUploadFormData({ ...uploadFormData, recordDate: e.target.value })
+                }
+              />
             </div>
           </div>
           <div className="space-y-2">
@@ -787,30 +968,61 @@ const PatientDashboard = () => {
               rows={4}
               placeholder="Details..."
               className="resize-none"
+              value={uploadFormData.description}
+              onChange={(e) =>
+                setUploadFormData({ ...uploadFormData, description: e.target.value })
+              }
             />
           </div>
           <div className="space-y-2">
             <Label>Upload File *</Label>
-            <div className="border-2 border-dashed border-muted-foreground/20 rounded-lg p-8 text-center hover:bg-muted/30 hover:border-primary/50 transition-all cursor-pointer">
+            <div
+              className="border-2 border-dashed border-muted-foreground/20 rounded-lg p-8 text-center hover:bg-muted/30 hover:border-primary/50 transition-all cursor-pointer"
+              onClick={() => document.getElementById('fileInput')?.click()}
+            >
+              <input
+                id="fileInput"
+                type="file"
+                className="hidden"
+                accept=".pdf,.png,.jpg,.jpeg"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) setSelectedFile(file);
+                }}
+              />
               <CloudUploadIcon className="w-10 h-10 mx-auto mb-3 text-muted-foreground" />
               <p className="text-sm font-medium mb-1">
-                Click to upload or drag and drop
+                {selectedFile ? selectedFile.name : 'Click to upload or drag and drop'}
               </p>
               <p className="text-xs text-muted-foreground">
                 PDF, PNG, JPG (Max 10MB)
               </p>
             </div>
           </div>
-          
+
           <div className="flex gap-3 pt-4">
-            <Button type="submit" className="flex-1">
-              <CloudUploadIcon className="w-4 h-4 mr-2" />
-              Upload & Encrypt
+            <Button
+              type="submit"
+              className="flex-1"
+              disabled={uploadRecordApi.loading}
+            >
+              {uploadRecordApi.loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Uploading...
+                </>
+              ) : (
+                <>
+                  <CloudUploadIcon className="w-4 h-4 mr-2" />
+                  Upload & Encrypt
+                </>
+              )}
             </Button>
             <Button
               type="button"
               variant="outline"
               onClick={() => setActiveSection('records')}
+              disabled={uploadRecordApi.loading}
             >
               Cancel
             </Button>
@@ -843,109 +1055,185 @@ const PatientDashboard = () => {
       <Tabs defaultValue="pending" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="pending">
-            Pending ({accessRequests.filter((r) => r.status === 'pending').length})
+            Pending ({accessRequests.filter((r) => r.status === 'PENDING').length})
           </TabsTrigger>
           <TabsTrigger value="approved">
-            Approved ({accessRequests.filter((r) => r.status === 'approved').length})
+            Approved ({accessRequests.filter((r) => r.status === 'APPROVED').length})
           </TabsTrigger>
-          <TabsTrigger value="denied">Denied (0)</TabsTrigger>
+          <TabsTrigger value="denied">
+            Denied ({accessRequests.filter((r) => r.status === 'DENIED').length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="pending" className="space-y-4 mt-6">
-          {accessRequests
-            .filter((r) => r.status === 'pending')
-            .map((req) => (
-              <Card
-                key={req.id}
-                className="border-muted/40 hover:border-primary/40 transition-all shadow-sm"
-              >
-                <CardContent className="p-6">
-                  <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Left side - Doctor Info */}
-                    <div className="flex items-start gap-4 lg:min-w-[280px]">
-                      <Avatar className="h-14 w-14 border-2 border-background">
-                        <AvatarImage src={`https://ui-avatars.com/api/?name=${encodeURIComponent(req.requesterName)}&background=random`} />
-                      </Avatar>
-                      <div>
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-semibold text-base">{req.requesterName}</h3>
-                          {getStatusBadge(req.status)}
+          {accessRequestsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          ) : accessRequests.filter((r) => r.status === 'PENDING').length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <CheckCircle2Icon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No pending requests found.</p>
+            </div>
+          ) : (
+            accessRequests
+              .filter((r) => r.status === 'PENDING')
+              .map((req) => (
+                <Card
+                  key={req.id}
+                  className="border-muted/40 hover:border-primary/40 transition-all shadow-sm"
+                >
+                  <CardContent className="p-6">
+                    <div className="flex flex-col lg:flex-row gap-6">
+                      {/* Left side - Doctor Info */}
+                      <div className="flex items-start gap-4 lg:min-w-[280px]">
+                        <Avatar className="h-14 w-14 border-2 border-background">
+                          <AvatarImage
+                            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(req.requesterName || 'Unknown')}&background=random`}
+                          />
+                        </Avatar>
+                        <div>
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold text-base">
+                              {req.requesterName || 'Unknown'}
+                            </h3>
+                            {getStatusBadge(req.status)}
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {req.requesterSpecialty || req.requesterRole || 'Healthcare Professional'}
+                          </p>
+                          <p className="text-xs font-mono text-muted-foreground mt-1">
+                            {req.requesterAddress}
+                          </p>
                         </div>
-                        <p className="text-sm text-muted-foreground">{req.requesterSpecialty}</p>
-                        <p className="text-xs font-mono text-muted-foreground mt-1">
-                          {req.requesterAddress}
-                        </p>
+                      </div>
+
+                      {/* Right side - Request Details */}
+                      <div className="flex-1 space-y-3">
+                        <div>
+                          <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                            Reason
+                          </Label>
+                          <p className="text-sm mt-1">{req.reason || 'No reason provided'}</p>
+                        </div>
+                        <div className="flex gap-6">
+                          <div className="flex-1">
+                            <Label className="text-xs text-muted-foreground uppercase tracking-wider">
+                              Requested
+                            </Label>
+                            <p className="text-sm font-medium mt-1">
+                              {getRelativeTime(req.requestedAt)}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Buttons inline on larger screens */}
+                        <div className="flex items-center justify-end gap-3 pt-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="text-destructive hover:bg-destructive/10"
+                            onClick={() =>
+                              handleDenyRequest(
+                                req.requesterAddress,
+                                req.requesterName || 'User'
+                              )
+                            }
+                            disabled={denyRequestApi.loading}
+                          >
+                            <XCircleIcon className="w-4 h-4 mr-2" />
+                            Deny
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() =>
+                              handleApproveRequest(
+                                req.requesterAddress,
+                                req.requesterName || 'User'
+                              )
+                            }
+                            disabled={approveRequestApi.loading}
+                          >
+                            <CheckCircle2Icon className="w-4 h-4 mr-2" />
+                            Approve
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                    
-                    {/* Right side - Request Details */}
-                    <div className="flex-1 space-y-3">
-                      <div>
-                        <Label className="text-xs text-muted-foreground uppercase tracking-wider">Reason</Label>
-                        <p className="text-sm mt-1">{req.reason}</p>
-                      </div>
-                      <div className="flex gap-6">
-                        <div className="flex-1">
-                          <Label className="text-xs text-muted-foreground uppercase tracking-wider">Duration</Label>
-                          <p className="text-sm font-medium mt-1">{req.duration}</p>
-                        </div>
-                        <div className="flex-1">
-                          <Label className="text-xs text-muted-foreground uppercase tracking-wider">Requested</Label>
-                          <p className="text-sm font-medium mt-1">{getRelativeTime(req.requestedAt)}</p>
-                        </div>
-                      </div>
-                      
-                      {/* Buttons inline on larger screens */}
-                      <div className="flex items-center justify-end gap-3 pt-2">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-destructive hover:bg-destructive/10"
-                          onClick={() => toast.error(`Denied ${req.requesterName}`)}
-                        >
-                          <XCircleIcon className="w-4 h-4 mr-2" />
-                          Deny
-                        </Button>
-                        <Button
-                          size="sm"
-                          onClick={() => toast.success(`Approved ${req.requesterName}`)}
-                        >
-                          <CheckCircle2Icon className="w-4 h-4 mr-2" />
-                          Approve
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-            {accessRequests.filter(r => r.status === 'pending').length === 0 && (
-                <div className="text-center py-12 text-muted-foreground">
-                    No pending requests found.
-                </div>
-            )}
+                  </CardContent>
+                </Card>
+              ))
+          )}
         </TabsContent>
 
         <TabsContent value="approved" className="space-y-4 mt-6">
-            {/* Similar structure for approved requests, simplified */}
-             {accessRequests
-            .filter((r) => r.status === 'approved')
-            .map((req) => (
+          {accessRequestsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          ) : accessRequests.filter((r) => r.status === 'APPROVED').length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <p>No approved requests found.</p>
+            </div>
+          ) : (
+            accessRequests
+              .filter((r) => r.status === 'APPROVED')
+              .map((req) => (
                 <Card key={req.id} className="border-muted/40">
-                     <CardContent className="p-6 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                             <Avatar>
-                                <AvatarImage src={`https://ui-avatars.com/api/?name=${encodeURIComponent(req.requesterName)}&background=random`} />
-                            </Avatar>
-                            <div>
-                                <h3 className="font-semibold">{req.requesterName}</h3>
-                                <p className="text-sm text-muted-foreground">{req.requesterSpecialty}</p>
-                            </div>
-                        </div>
-                         {getStatusBadge(req.status)}
-                     </CardContent>
+                  <CardContent className="p-6 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Avatar>
+                        <AvatarImage
+                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(req.requesterName || 'Unknown')}&background=random`}
+                        />
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold">{req.requesterName || 'Unknown'}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {req.requesterSpecialty || req.requesterRole || 'Healthcare Professional'}
+                        </p>
+                      </div>
+                    </div>
+                    {getStatusBadge(req.status)}
+                  </CardContent>
                 </Card>
-            ))}
+              ))
+          )}
+        </TabsContent>
+
+        <TabsContent value="denied" className="space-y-4 mt-6">
+          {accessRequestsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          ) : accessRequests.filter((r) => r.status === 'DENIED').length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <p>No denied requests found.</p>
+            </div>
+          ) : (
+            accessRequests
+              .filter((r) => r.status === 'DENIED')
+              .map((req) => (
+                <Card key={req.id} className="border-muted/40">
+                  <CardContent className="p-6 flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Avatar>
+                        <AvatarImage
+                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(req.requesterName || 'Unknown')}&background=random`}
+                        />
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold">{req.requesterName || 'Unknown'}</h3>
+                        <p className="text-sm text-muted-foreground">
+                          {req.requesterSpecialty || req.requesterRole || 'Healthcare Professional'}
+                        </p>
+                      </div>
+                    </div>
+                    {getStatusBadge(req.status)}
+                  </CardContent>
+                </Card>
+              ))
+          )}
         </TabsContent>
       </Tabs>
     </div>
@@ -973,65 +1261,77 @@ const PatientDashboard = () => {
           </div>
         </CardHeader>
         <CardContent>
+          {permissionsLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          ) : permissions.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <KeyIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No active permissions found</p>
+            </div>
+          ) : (
             <Table>
-            <TableHeader>
+              <TableHeader>
                 <TableRow>
-                <TableHead>User</TableHead>
-                <TableHead>Role</TableHead>
-                <TableHead>Granted</TableHead>
-                <TableHead>Expires</TableHead>
-                <TableHead>Access Count</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                  <TableHead>User</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Granted</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
-            </TableHeader>
-            <TableBody>
+              </TableHeader>
+              <TableBody>
                 {permissions.map((perm) => (
-                <TableRow key={perm.id}>
+                  <TableRow key={perm.id}>
                     <TableCell>
-                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
-                            <AvatarImage src={`https://ui-avatars.com/api/?name=${encodeURIComponent(perm.userName)}&background=random`} />
+                          <AvatarImage
+                            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(perm.userName || 'Unknown')}&background=random`}
+                          />
                         </Avatar>
                         <div>
-                        <p className="font-medium text-sm">{perm.userName}</p>
-                        <p className="text-xs text-muted-foreground font-mono max-w-[100px] truncate">
-                            {perm.userAddress}
-                        </p>
+                          <p className="font-medium text-sm">{perm.userName || 'Unknown'}</p>
+                          <p className="text-xs text-muted-foreground font-mono max-w-[100px] truncate">
+                            {perm.authorizedAddress}
+                          </p>
                         </div>
-                    </div>
+                      </div>
                     </TableCell>
                     <TableCell>
-                    <Badge variant="secondary" className="font-normal">{perm.userRole}</Badge>
+                      <Badge variant="secondary" className="font-normal">
+                        {perm.userRole || 'User'}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
-                    {formatDate(perm.grantedAt)}
-                    </TableCell>
-                    <TableCell className="text-sm text-muted-foreground">
-                    {formatDate(perm.expiresAt)}
-                    </TableCell>
-                    <TableCell>
-                         <div className="flex items-center gap-2">
-                            <ActivityIcon className="h-3 w-3 text-muted-foreground" />
-                            {perm.accessCount}
-                         </div>
+                      {formatDate(perm.grantedAt)}
                     </TableCell>
                     <TableCell>{getStatusBadge(perm.status)}</TableCell>
                     <TableCell className="text-right">
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 px-2"
-                        onClick={() => toast.info(`Revoked ${perm.userName}`)}
-                    >
-                        <LockIcon className="w-3 h-3 mr-1" />
-                        Revoke
-                    </Button>
+                      {perm.status === 'active' && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="text-destructive hover:bg-destructive/10 hover:text-destructive h-8 px-2"
+                          onClick={() =>
+                            handleRevokePermission(
+                              perm.authorizedAddress,
+                              perm.userName || 'User'
+                            )
+                          }
+                          disabled={revokePermissionApi.loading}
+                        >
+                          <LockIcon className="w-3 h-3 mr-1" />
+                          Revoke
+                        </Button>
+                      )}
                     </TableCell>
-                </TableRow>
+                  </TableRow>
                 ))}
-            </TableBody>
+              </TableBody>
             </Table>
+          )}
         </CardContent>
       </Card>
     </div>

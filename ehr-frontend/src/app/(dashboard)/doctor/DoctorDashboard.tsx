@@ -71,96 +71,122 @@ import {
 } from 'lucide-react';
 import { StatsCard } from '@/components/dashboard/StatsCard';
 import { ActivityFeed } from '@/components/dashboard/ActivityFeed';
+import { toast } from 'sonner';
+import { useFetchApi, useApi } from '@/hooks/useApi';
+import { useAuth } from '@/hooks/useAuth';
+import {
+  dashboardService,
+  patientsService,
+  accessRequestsService,
+  recordsService,
+  auditLogService,
+  profileService,
+} from '@/services/api';
 
 const DoctorDashboard = () => {
   const [activeSection, setActiveSection] = useState('dashboard');
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [searchPatient, setSearchPatient] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedPatientId, setSelectedPatientId] = useState<string | null>(null);
+  const [requestAccessForm, setRequestAccessForm] = useState({
+    patientId: '',
+    reason: '',
+  });
   const recordsPerPage = 5;
-  const totalRecords = 24;
 
-  // Mock data
-  const stats = {
-    authorizedPatients: 8,
-    recordsAccessed: 24,
-    pendingRequests: 3,
-    recentActivity: 15,
+  const { user } = useAuth();
+
+  // Fetch doctor dashboard data
+  const {
+    data: dashboardData,
+    loading: dashboardLoading,
+    refetch: refetchDashboard,
+  } = useFetchApi(() => dashboardService.getDoctorDashboard(), []);
+
+  // Fetch my patients
+  const {
+    data: patientsData,
+    loading: patientsLoading,
+    refetch: refetchPatients,
+  } = useFetchApi(() => patientsService.getMyPatients(), []);
+
+  // Fetch outgoing access requests
+  const {
+    data: requestsData,
+    loading: requestsLoading,
+    refetch: refetchRequests,
+  } = useFetchApi(() => accessRequestsService.getMyOutgoingRequests(), []);
+
+  // Fetch audit log
+  const {
+    data: auditLogData,
+    loading: auditLogLoading,
+    refetch: refetchAuditLog,
+  } = useFetchApi(() => auditLogService.getMyAuditLog(), []);
+
+  // Fetch doctor profile
+  const {
+    data: profileData,
+    loading: profileLoading,
+    refetch: refetchProfile,
+  } = useFetchApi(() => profileService.getMyDoctorProfile(), []);
+
+  // API mutations
+  const requestAccessApi = useApi(accessRequestsService.requestAccess);
+  const updateProfileApi = useApi(profileService.updateMyDoctorProfile);
+
+  const stats = dashboardData?.data
+    ? {
+        authorizedPatients: dashboardData.data.cards.totalPatients || 0,
+        recordsAccessed: dashboardData.data.cards.recordsAccessed || 0,
+        pendingRequests: dashboardData.data.cards.pendingRequests || 0,
+        recentActivity: dashboardData.data.recentActivity?.length || 0,
+      }
+    : {
+        authorizedPatients: 0,
+        recordsAccessed: 0,
+        pendingRequests: 0,
+        recentActivity: 0,
+      };
+
+  const recentActivities = dashboardData?.data?.recentActivity || auditLogData?.data?.entries || [];
+  const patients = patientsData?.data?.patients || [];
+  const totalRecords = patientsData?.data?.total || 0;
+
+  // Action handlers
+  const handleRequestAccess = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!requestAccessForm.patientId || !requestAccessForm.reason) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    try {
+      await requestAccessApi.execute({
+        patientId: requestAccessForm.patientId,
+        reason: requestAccessForm.reason,
+      });
+      toast.success('Access request sent successfully!');
+      setRequestAccessForm({ patientId: '', reason: '' });
+      refetchRequests();
+      refetchDashboard();
+      setActiveSection('dashboard');
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to request access');
+    }
   };
 
-  const recentActivities = [
-    {
-      id: '1',
-      action: 'Accessed record',
-      performedBy: 'You',
-      timestamp: Date.now() / 1000 - 3600,
-      details: "Viewed John Doe's lab results",
-    },
-    {
-      id: '2',
-      action: 'Granted permission',
-      performedBy: 'Admin',
-      timestamp: Date.now() / 1000 - 7200,
-      details: 'Access granted to Jane Smith',
-    },
-    {
-      id: '3',
-      action: 'Upload record',
-      performedBy: 'You',
-      timestamp: Date.now() / 1000 - 86400,
-      details: 'Uploaded vaccination report',
-    },
-    {
-      id: '4',
-      action: 'Request access',
-      performedBy: 'You',
-      timestamp: Date.now() / 1000 - 172800,
-      details: 'Requested access to Robert Johnson',
-    },
-  ];
-
-  const patients = [
-    {
-      id: 1,
-      name: 'John Doe',
-      lastVisit: 'Jan 12, 2024',
-      condition: 'Hypertension',
-      status: 'Stable',
-      image: 'https://ui-avatars.com/api/?name=John+Doe&background=random',
-    },
-    {
-      id: 2,
-      name: 'Jane Smith',
-      lastVisit: 'Jan 10, 2024',
-      condition: 'Diabetes T2',
-      status: 'Monitor',
-      image: 'https://ui-avatars.com/api/?name=Jane+Smith&background=random',
-    },
-    {
-      id: 3,
-      name: 'Robert Johnson',
-      lastVisit: 'Jan 05, 2024',
-      condition: 'Post-op',
-      status: 'Recovering',
-      image: 'https://ui-avatars.com/api/?name=Robert+Johnson&background=random',
-    },
-    {
-      id: 4,
-      name: 'Emily Davis',
-      lastVisit: 'Jan 02, 2024',
-      condition: 'Asthma',
-      status: 'Stable',
-      image: 'https://ui-avatars.com/api/?name=Emily+Davis&background=random',
-    },
-    {
-      id: 5,
-      name: 'Michael Wilson',
-      lastVisit: 'Dec 28, 2023',
-      condition: 'Arrhythmia',
-      status: 'Critical',
-      image: 'https://ui-avatars.com/api/?name=Michael+Wilson&background=random',
-    },
-  ];
+  const handleUpdateProfile = async () => {
+    try {
+      await updateProfileApi.execute(profileData?.data || {});
+      toast.success('Profile updated successfully!');
+      setIsEditingProfile(false);
+      refetchProfile();
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to update profile');
+    }
+  };
 
   const navItems = [
     {
@@ -214,37 +240,45 @@ const DoctorDashboard = () => {
   const renderDashboard = () => (
     <div className="space-y-6 animate-in fade-in-50 duration-500">
       {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Authorized Patients"
-          value={stats.authorizedPatients}
-          icon={UsersIcon}
-          description="Active authorizations"
-          trend={{ value: 12, label: "vs last month", trend: 'up' }}
-          variant="gradient"
-        />
-        <StatsCard
-          title="Records Accessed"
-          value={stats.recordsAccessed}
-          icon={FileTextIcon}
-          description="Total views this month"
-          trend={{ value: 4, label: "vs last month", trend: 'up' }}
-        />
-        <StatsCard
-          title="Pending Requests"
-          value={stats.pendingRequests}
-          icon={ClockIcon}
-          description="Awaiting approval"
-          trend={{ value: 2, label: "new requests", trend: 'neutral' }}
-        />
-        <StatsCard
-          title="Total Activity"
-          value={stats.recentActivity}
-          icon={ActivityIcon}
-          description="Actions this week"
-          trend={{ value: 5, label: "vs last week", trend: 'up' }}
-        />
-      </div>
+      {dashboardLoading ? (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="h-32 bg-muted/30 rounded-lg animate-pulse"></div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          <StatsCard
+            title="Authorized Patients"
+            value={stats.authorizedPatients}
+            icon={UsersIcon}
+            description="Active authorizations"
+            trend={{ value: 12, label: 'vs last month', trend: 'up' }}
+            variant="gradient"
+          />
+          <StatsCard
+            title="Records Accessed"
+            value={stats.recordsAccessed}
+            icon={FileTextIcon}
+            description="Total views this month"
+            trend={{ value: 4, label: 'vs last month', trend: 'up' }}
+          />
+          <StatsCard
+            title="Pending Requests"
+            value={stats.pendingRequests}
+            icon={ClockIcon}
+            description="Awaiting approval"
+            trend={{ value: 2, label: 'new requests', trend: 'neutral' }}
+          />
+          <StatsCard
+            title="Total Activity"
+            value={stats.recentActivity}
+            icon={ActivityIcon}
+            description="Actions this week"
+            trend={{ value: 5, label: 'vs last week', trend: 'up' }}
+          />
+        </div>
+      )}
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         {/* Recent Patients */}
@@ -491,44 +525,84 @@ const DoctorDashboard = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-                {patients.map((patient) => (
-                <TableRow key={patient.id}>
-                  <TableCell>
-                    <div className="flex items-center gap-3">
-                      <Avatar>
-                        <AvatarImage src={patient.image} />
-                        <AvatarFallback>{patient.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{patient.name}</span>
-                        <span className="text-xs text-muted-foreground">ID: #{1000 + patient.id}</span>
-                      </div>
+              {patientsLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8">
+                    <div className="flex items-center justify-center">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                     </div>
                   </TableCell>
-                  <TableCell>{patient.condition}</TableCell>
-                  <TableCell>
-                    <Badge variant="outline" className={getStatusColor(patient.status)}>
-                      {patient.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{patient.lastVisit}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2">
-                       <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                            {<Icons.Phone className="h-4 w-4" />}
-                       </Button>
-                        <Button size="icon" variant="ghost" className="h-8 w-8 text-muted-foreground hover:text-foreground">
-                            {<Icons.Mail className="h-4 w-4" />}
-                       </Button>
-                    </div>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button variant="ghost" size="sm" onClick={() => setActiveSection('records')}>
-                      View Records
+                </TableRow>
+              ) : patients.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
+                    <UsersIcon className="h-12 w-12 mx-auto mb-2 opacity-50" />
+                    <p>No authorized patients found</p>
+                    <Button
+                      variant="link"
+                      className="mt-2"
+                      onClick={() => setActiveSection('request')}
+                    >
+                      Request access to a patient
                     </Button>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                patients.map((patient) => (
+                  <TableRow key={patient.patientId}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage
+                            src={`https://ui-avatars.com/api/?name=${encodeURIComponent(patient.patientName)}&background=random`}
+                          />
+                          <AvatarFallback>
+                            {patient.patientName.charAt(0)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="font-medium">{patient.patientName}</span>
+                          <span className="text-xs text-muted-foreground font-mono">
+                            {patient.patientAddress.substring(0, 10)}...
+                          </span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline">
+                        {patient.recordCount} record{patient.recordCount !== 1 ? 's' : ''}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="bg-green-500/10 text-green-500">
+                        Active
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {patient.lastAccessed
+                        ? new Date(patient.lastAccessed * 1000).toLocaleDateString()
+                        : 'Never'}
+                    </TableCell>
+                    <TableCell>
+                      <div className="text-xs text-muted-foreground">
+                        {patient.patientEmail || 'N/A'}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setSelectedPatientId(patient.patientId);
+                          setActiveSection('records');
+                        }}
+                      >
+                        View Records
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -552,77 +626,114 @@ const DoctorDashboard = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form className="space-y-6">
+          <form className="space-y-6" onSubmit={handleRequestAccess}>
             <div className="space-y-2">
-              <Label htmlFor="patientSearch">Search Patient</Label>
+              <Label htmlFor="patientId">Patient ID or Email *</Label>
               <div className="relative">
                 <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
-                  id="patientSearch"
-                  placeholder="Enter patient email, wallet address, or ID"
-                  value={searchPatient}
-                  onChange={(e) => setSearchPatient(e.target.value)}
+                  id="patientId"
+                  placeholder="Enter patient ID or email"
+                  value={requestAccessForm.patientId}
+                  onChange={(e) =>
+                    setRequestAccessForm({ ...requestAccessForm, patientId: e.target.value })
+                  }
                   className="pl-9"
+                  required
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="requestReason">Reason for Access</Label>
+              <Label htmlFor="requestReason">Reason for Access *</Label>
               <Textarea
                 id="requestReason"
                 rows={4}
                 placeholder="Explain why you need access to this patient's records (e.g., upcoming appointment, consultation)..."
                 className="resize-none"
+                value={requestAccessForm.reason}
+                onChange={(e) =>
+                  setRequestAccessForm({ ...requestAccessForm, reason: e.target.value })
+                }
+                required
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="accessDuration">Access Duration</Label>
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select duration" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="7">7 Days</SelectItem>
-                  <SelectItem value="30">30 Days</SelectItem>
-                  <SelectItem value="90">90 Days</SelectItem>
-                  <SelectItem value="365">1 Year</SelectItem>
-                  <SelectItem value="unlimited">Unlimited (Emergency)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <Button className="w-full">
-              <UserPlusIcon className="w-4 h-4 mr-2" />
-              Send Access Request
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={requestAccessApi.loading}
+            >
+              {requestAccessApi.loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <UserPlusIcon className="w-4 h-4 mr-2" />
+                  Send Access Request
+                </>
+              )}
             </Button>
           </form>
         </CardContent>
       </Card>
 
       <div className="pt-6">
-        <h3 className="text-lg font-semibold mb-4">Pending Requests</h3>
-        <div className="space-y-3">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="border-muted/40 shadow-sm">
-              <CardContent className="p-4 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-amber-100 dark:bg-amber-900/20 flex items-center justify-center text-amber-600 dark:text-amber-400">
-                    <ClockIcon className="h-5 w-5" />
+        <h3 className="text-lg font-semibold mb-4">My Outgoing Requests</h3>
+        {requestsLoading ? (
+          <div className="flex items-center justify-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        ) : requestsData?.data?.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">
+            <p>No outgoing requests found</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {requestsData?.data?.map((req: any) => (
+              <Card key={req.id} className="border-muted/40 shadow-sm">
+                <CardContent className="p-4 flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={cn(
+                        'h-10 w-10 rounded-full flex items-center justify-center',
+                        req.status === 'PENDING'
+                          ? 'bg-amber-100 dark:bg-amber-900/20 text-amber-600 dark:text-amber-400'
+                          : req.status === 'APPROVED'
+                            ? 'bg-green-100 dark:bg-green-900/20 text-green-600 dark:text-green-400'
+                            : 'bg-red-100 dark:bg-red-900/20 text-red-600 dark:text-red-400'
+                      )}
+                    >
+                      <ClockIcon className="h-5 w-5" />
+                    </div>
+                    <div>
+                      <p className="font-medium text-sm">
+                        Request to {req.patientName || 'Patient'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {req.reason || 'Access request'}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="font-medium text-sm">Request to Patient {i}</p>
-                    <p className="text-xs text-muted-foreground">Sent {i} day{i > 1 ? 's' : ''} ago</p>
-                  </div>
-                </div>
-                <Badge variant="secondary" className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800">
-                  Pending Approval
-                </Badge>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <Badge
+                    variant="secondary"
+                    className={cn(
+                      req.status === 'PENDING'
+                        ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800'
+                        : req.status === 'APPROVED'
+                          ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800'
+                          : 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border-red-200 dark:border-red-800'
+                    )}
+                  >
+                    {req.status}
+                  </Badge>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

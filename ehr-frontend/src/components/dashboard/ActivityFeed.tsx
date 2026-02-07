@@ -23,7 +23,7 @@ const activityIcons: Record<string, { icon: typeof UploadIcon; color: string; bg
   upload: { icon: UploadIcon, color: 'text-blue-500', bg: 'bg-blue-500/10' },
   access: { icon: EyeIcon, color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
   permission: { icon: KeyIcon, color: 'text-violet-500', bg: 'bg-violet-500/10' },
-  request: { icon: BellIcon, color: 'text-amber-500', bg: 'bg-amber-500/10' },
+  request: { icon: BellIcon, color: 'text-yellow-500', bg: 'bg-yellow-500/10' },
   record: { icon: FileTextIcon, color: 'text-cyan-500', bg: 'bg-cyan-500/10' },
   grant: { icon: UserCheckIcon, color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
   default: { icon: ClockIcon, color: 'text-muted-foreground', bg: 'bg-muted' },

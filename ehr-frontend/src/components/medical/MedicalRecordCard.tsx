@@ -82,7 +82,7 @@ const recordTypeConfig = {
     },
     diagnosis: {
         label: 'Diagnosis',
-        color: 'bg-orange-100 text-orange-700 border-orange-200',
+        color: 'bg-yellow-100 text-yellow-700 border-yellow-200',
         icon: '🩺',
     },
     other: {

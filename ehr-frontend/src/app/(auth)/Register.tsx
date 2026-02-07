@@ -129,14 +129,14 @@ const Register = () => {
         className="fixed inset-0 bg-cover bg-center -z-20"
         style={{ backgroundImage: "url('/bg-image.png')" }}
       />
-      <div className="fixed inset-0 bg-gradient-to-br from-amber-100/40 to-black/60 -z-10" />
+      <div className="fixed inset-0 bg-gradient-to-br from-primary/10 to-black/60 -z-10" />
 
       <div className="w-full max-w-2xl bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-8 lg:p-12 border border-white/20">
         {/* Header */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="p-3 bg-primary/10 rounded-full">
-              <ShieldCheckIcon className="w-12 h-12 text-primary" />
+            <div className="p-3 bg-cyan-500/10 rounded-full">
+              <ShieldCheckIcon className="w-12 h-12 text-cyan-500" />
             </div>
           </div>
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Create Account</h1>
@@ -164,11 +164,11 @@ const Register = () => {
           {/* Role Selection */}
           <div className="space-y-2">
             <Label htmlFor="role" className="flex items-center gap-2 text-gray-700">
-              <UserIcon className="w-4 h-4 text-primary" />
+              <UserIcon className="w-4 h-4 text-cyan-500" />
               Register As
             </Label>
             <Select value={userRole} onValueChange={(value) => setUserRole(value as UserRole)}>
-              <SelectTrigger className="bg-gray-50 border-gray-200 h-11 focus:ring-primary">
+              <SelectTrigger className="bg-gray-50 border-gray-200 h-11 focus:ring-cyan-500">
                 <SelectValue placeholder="Select your role" />
               </SelectTrigger>
               <SelectContent>
@@ -182,7 +182,7 @@ const Register = () => {
           {/* Full Name */}
           <div className="space-y-2">
             <Label htmlFor="fullName" className="flex items-center gap-2 text-gray-700">
-              <UserIcon className="w-4 h-4 text-primary" />
+              <UserIcon className="w-4 h-4 text-cyan-500" />
               Full Name
             </Label>
             <Input
@@ -192,14 +192,14 @@ const Register = () => {
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               required
-              className="bg-gray-50 border-gray-200 h-11 focus:border-primary focus:ring-primary"
+              className="bg-gray-50 border-gray-200 h-11 focus:border-cyan-500 focus:ring-cyan-500"
             />
           </div>
 
           {/* Email */}
           <div className="space-y-2">
             <Label htmlFor="email" className="flex items-center gap-2 text-gray-700">
-              <MailIcon className="w-4 h-4 text-primary" />
+              <MailIcon className="w-4 h-4 text-cyan-500" />
               Email Address
             </Label>
             <Input
@@ -209,14 +209,14 @@ const Register = () => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="bg-gray-50 border-gray-200 h-11 focus:border-primary focus:ring-primary"
+              className="bg-gray-50 border-gray-200 h-11 focus:border-cyan-500 focus:ring-cyan-500"
             />
           </div>
 
           {/* Password */}
           <div className="space-y-2">
             <Label htmlFor="password" className="flex items-center gap-2 text-gray-700">
-              <LockIcon className="w-4 h-4 text-primary" />
+              <LockIcon className="w-4 h-4 text-cyan-500" />
               Password
             </Label>
             <div className="relative">
@@ -228,13 +228,13 @@ const Register = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 minLength={8}
-                className="bg-gray-50 border-gray-200 h-11 pr-12 focus:border-primary focus:ring-primary"
+                className="bg-gray-50 border-gray-200 h-11 pr-12 focus:border-cyan-500 focus:ring-cyan-500"
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-gray-500 hover:text-primary transition-colors"
+                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-gray-500 hover:text-cyan-500 transition-colors"
                 onClick={() => setShowPassword(!showPassword)}
               >
                 {showPassword ? <EyeOffIcon className="w-4 h-4" /> : <EyeIcon className="w-4 h-4" />}
@@ -246,7 +246,7 @@ const Register = () => {
           {/* Confirm Password */}
           <div className="space-y-2">
             <Label htmlFor="confirmPassword" className="flex items-center gap-2 text-gray-700">
-              <LockIcon className="w-4 h-4 text-primary" />
+              <LockIcon className="w-4 h-4 text-cyan-500" />
               Confirm Password
             </Label>
             <div className="relative">
@@ -258,13 +258,13 @@ const Register = () => {
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
                 minLength={8}
-                className="bg-gray-50 border-gray-200 h-11 pr-12 focus:border-primary focus:ring-primary"
+                className="bg-gray-50 border-gray-200 h-11 pr-12 focus:border-cyan-500 focus:ring-cyan-500"
               />
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
-                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-gray-500 hover:text-primary transition-colors"
+                className="absolute right-0 top-0 h-full px-3 hover:bg-transparent text-gray-500 hover:text-cyan-500 transition-colors"
                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
               >
                 {showConfirmPassword ? (
@@ -416,7 +416,7 @@ const Register = () => {
           {/* Phone Number */}
           <div className="space-y-2">
             <Label htmlFor="phone" className="flex items-center gap-2 text-gray-700">
-              <PhoneIcon className="w-4 h-4 text-primary" />
+              <PhoneIcon className="w-4 h-4 text-cyan-500" />
               Phone Number
             </Label>
             <Input
@@ -426,7 +426,7 @@ const Register = () => {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
-              className="bg-gray-50 border-gray-200 h-11 focus:border-primary focus:ring-primary"
+              className="bg-gray-50 border-gray-200 h-11 focus:border-cyan-500 focus:ring-cyan-500"
             />
           </div>
 
@@ -436,22 +436,22 @@ const Register = () => {
               id="terms"
               checked={agreeToTerms}
               onCheckedChange={(checked) => setAgreeToTerms(checked as boolean)}
-              className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+              className="data-[state=checked]:bg-cyan-500 data-[state=checked]:border-cyan-500"
             />
             <Label htmlFor="terms" className="text-sm font-normal cursor-pointer text-gray-600 hover:text-gray-900">
               I agree to the{' '}
-              <a href="#" className="text-primary hover:text-amber-600 hover:underline">
+              <a href="#" className="text-cyan-500 hover:text-cyan-600 hover:underline">
                 Terms and Conditions
               </a>{' '}
               and{' '}
-              <a href="#" className="text-primary hover:text-amber-600 hover:underline">
+              <a href="#" className="text-cyan-500 hover:text-cyan-600 hover:underline">
                 Privacy Policy
               </a>
             </Label>
           </div>
 
           {/* Submit Button */}
-          <Button type="submit" disabled={isLoading} className="w-full h-11 text-base bg-primary hover:bg-amber-600 text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5">
+          <Button type="submit" disabled={isLoading} className="w-full h-11 text-base bg-cyan-500 hover:bg-cyan-600 text-white shadow-lg shadow-cyan-500/20 transition-all hover:-translate-y-0.5">
             {isLoading ? (
               <>Creating Account...</>
             ) : (
@@ -493,7 +493,7 @@ const Register = () => {
           Already have an account?{' '}
           <Link
             to="/auth/login"
-            className="text-primary hover:text-amber-600 font-semibold transition-colors"
+            className="text-cyan-500 hover:text-cyan-600 font-semibold transition-colors"
           >
             Login here
           </Link>

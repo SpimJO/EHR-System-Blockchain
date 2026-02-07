@@ -90,12 +90,12 @@ const Login = () => {
         className="fixed inset-0 bg-cover bg-center -z-20"
         style={{ backgroundImage: "url('/bg-image.png')" }}
       />
-      <div className="fixed inset-0 bg-gradient-to-br from-amber-100/40 to-black/60 -z-10" />
+      <div className="fixed inset-0 bg-gradient-to-br from-primary/10 to-black/60 -z-10" />
 
       <div className="w-full max-w-6xl">
         <div className="grid grid-cols-1 lg:grid-cols-2 bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden min-h-[600px] border border-white/20">
           {/* Left Side - Branding */}
-          <div className="bg-gradient-to-br from-amber-500/90 to-amber-700/90 text-white p-12 lg:p-16 flex flex-col justify-center relative overflow-hidden">
+          <div className="bg-gradient-to-br from-primary/90 to-primary/80 text-white p-12 lg:p-16 flex flex-col justify-center relative overflow-hidden">
             {/* Abstract Background Pattern */}
             <div className="absolute top-0 right-0 -mr-20 -mt-20 w-80 h-80 bg-white/10 rounded-full blur-3xl opacity-50"></div>
             <div className="absolute bottom-0 left-0 -ml-20 -mb-20 w-80 h-80 bg-black/10 rounded-full blur-3xl opacity-50"></div>
@@ -106,22 +106,22 @@ const Login = () => {
                 <h1 className="text-4xl font-bold mb-4 leading-tight text-white drop-shadow-sm">
                   Blockchain Based with AES-encryption for Decentralized EHR System
                 </h1>
-                <p className="text-lg opacity-90 leading-relaxed text-amber-50">
+                <p className="text-lg opacity-90 leading-relaxed text-white/90">
                   Your health records, secured and decentralized
                 </p>
               </div>
 
               <div className="space-y-5">
                 <div className="flex items-center gap-4 p-4 bg-white/10 rounded-xl backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors">
-                  <LockIcon className="w-6 h-6 text-amber-100" />
+                  <LockIcon className="w-6 h-6 text-white" />
                   <span className="font-medium text-white">Encrypted Records</span>
                 </div>
                 <div className="flex items-center gap-4 p-4 bg-white/10 rounded-xl backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors">
-                  <ShieldCheckIcon className="w-6 h-6 text-amber-100" />
+                  <ShieldCheckIcon className="w-6 h-6 text-white" />
                   <span className="font-medium text-white">Immutable Records</span>
                 </div>
                 <div className="flex items-center gap-4 p-4 bg-white/10 rounded-xl backdrop-blur-md border border-white/20 hover:bg-white/20 transition-colors">
-                  <UserIcon className="w-6 h-6 text-amber-100" />
+                  <UserIcon className="w-6 h-6 text-white" />
                   <span className="font-medium text-white">You Control Access</span>
                 </div>
               </div>
@@ -219,14 +219,14 @@ const Login = () => {
                   </div>
                   <a
                     href="#"
-                    className="text-sm text-primary hover:text-amber-600 font-medium transition-colors"
+                    className="text-sm text-primary hover:text-primary/80 font-medium transition-colors"
                   >
                     Forgot Password?
                   </a>
                 </div>
 
                 {/* Submit Button */}
-                <Button type="submit" disabled={isLoading} className="w-full h-11 text-base bg-primary hover:bg-amber-600 text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5">
+                <Button type="submit" disabled={isLoading} className="w-full h-11 text-base bg-primary hover:bg-primary/90 text-white shadow-lg shadow-primary/20 transition-all hover:-translate-y-0.5">
                   {isLoading ? 'Logging in...' : (
                     <>
                       <MailIcon className="w-4 h-4 mr-2" />
@@ -266,7 +266,7 @@ const Login = () => {
                 Don't have an account?{' '}
                 <Link
                   to="/auth/register"
-                  className="text-primary hover:text-amber-600 font-semibold transition-colors"
+                  className="text-primary hover:text-primary/80 font-semibold transition-colors"
                 >
                   Register here
                 </Link>

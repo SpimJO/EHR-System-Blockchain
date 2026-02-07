@@ -43,7 +43,7 @@ interface AccessRequestCardProps {
 const statusConfig = {
     pending: {
         label: 'Pending',
-        color: 'bg-orange-100 text-orange-700 border-orange-300',
+        color: 'bg-yellow-100 text-yellow-700 border-yellow-300',
         icon: ClockIcon,
     },
     approved: {
@@ -101,7 +101,7 @@ export function AccessRequestCard({
             className={cn(
                 'group relative overflow-hidden transition-all duration-300 border-2',
                 request.status === 'pending'
-                    ? 'border-orange-200 bg-gradient-to-br from-orange-50/50 to-white hover:border-orange-300 hover:shadow-lg'
+                    ? 'border-yellow-200 bg-gradient-to-br from-yellow-50/50 to-white hover:border-yellow-300 hover:shadow-lg'
                     : request.status === 'approved'
                         ? 'border-green-200 bg-gradient-to-br from-green-50/50 to-white'
                         : 'border-gray-200 bg-gray-50/50',
@@ -113,7 +113,7 @@ export function AccessRequestCard({
             <div
                 className={cn(
                     'absolute top-0 left-0 right-0 h-1',
-                    request.status === 'pending' && 'bg-orange-500',
+                    request.status === 'pending' && 'bg-yellow-500',
                     request.status === 'approved' && 'bg-green-500',
                     request.status === 'denied' && 'bg-red-500'
                 )}
@@ -263,7 +263,7 @@ export function AccessRequestCard({
 
             {/* Pulse animation for pending */}
             {request.status === 'pending' && (
-                <div className="absolute -inset-0.5 bg-orange-400 rounded-lg opacity-0 group-hover:opacity-10 blur-xl transition-opacity duration-500 -z-10 animate-pulse" />
+                <div className="absolute -inset-0.5 bg-yellow-400 rounded-lg opacity-0 group-hover:opacity-10 blur-xl transition-opacity duration-500 -z-10 animate-pulse" />
             )}
         </Card>
     );

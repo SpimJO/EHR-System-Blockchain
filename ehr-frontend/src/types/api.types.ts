@@ -166,10 +166,12 @@ export interface AuditLogEntry {
   actor: string;
   actorAddress: string;
   timestamp: number;
+  date: string; // ISO 8601 date string added by backend
   transactionHash: string;
   blockNumber?: number;
   etherscanUrl?: string;
   metadata?: Record<string, any>;
+  details?: Record<string, any>;
 }
 
 export interface AuditLogResponse {

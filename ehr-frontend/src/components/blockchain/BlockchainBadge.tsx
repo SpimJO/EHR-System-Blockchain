@@ -18,7 +18,7 @@ export function BlockchainBadge({
 }: BlockchainBadgeProps) {
     const variantStyles = {
         verified: 'bg-purple-100 text-purple-700 border-purple-200',
-        pending: 'bg-orange-100 text-orange-700 border-orange-200',
+        pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
         onchain: 'bg-green-100 text-green-700 border-green-200',
     };
 

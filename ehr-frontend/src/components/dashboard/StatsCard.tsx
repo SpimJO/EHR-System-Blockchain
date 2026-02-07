@@ -34,7 +34,7 @@ export default function StatsCard({
     <Card className={cn(
       "group relative overflow-hidden transition-all duration-300 hover:shadow-lg",
       isGradient 
-        ? "bg-gradient-to-br from-primary via-primary to-orange-500 text-white border-0 shadow-lg shadow-primary/20" 
+        ? "bg-gradient-to-br from-primary via-primary to-primary/80 text-white border-0 shadow-lg shadow-primary/20" 
         : "border-border/50 bg-card hover:border-primary/20 hover:shadow-primary/5",
       className
     )}>

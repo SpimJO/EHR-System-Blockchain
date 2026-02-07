@@ -27,7 +27,7 @@ const Home = () => {
       
       {/* Floating Orbs */}
       <div className="fixed top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-[120px] animate-pulse-glow z-0" />
-      <div className="fixed bottom-20 right-10 w-96 h-96 bg-orange-400/15 rounded-full blur-[150px] z-0" />
+      <div className="fixed bottom-20 right-10 w-96 h-96 bg-primary/15 rounded-full blur-[150px] z-0" />
       <div className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[200px] z-0" />
 
       {/* Header */}

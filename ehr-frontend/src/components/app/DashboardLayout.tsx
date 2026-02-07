@@ -142,7 +142,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
 
           <SidebarFooter className="p-4">
             {/* User Card with Gradient Border */}
-            <div className="relative rounded-xl p-[1px] bg-gradient-to-r from-primary/50 via-orange-400/50 to-primary/50">
+            <div className="relative rounded-xl p-[1px] bg-gradient-to-r from-primary/50 via-primary/70 to-primary/50">
               <div className="rounded-xl bg-card p-3 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="relative">
@@ -217,7 +217,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({
                   )} 
                   onClick={() => setTheme('light')}
                 >
-                  <SunIcon className="h-4 w-4 text-orange-500" />
+                  <SunIcon className="h-4 w-4 text-yellow-500" />
                 </Button>
                 <Button 
                   variant="ghost" 

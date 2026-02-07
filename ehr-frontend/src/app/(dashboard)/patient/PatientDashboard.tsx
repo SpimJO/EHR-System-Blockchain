@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import DashboardLayout from '@/components/app/DashboardLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,18 +35,14 @@ import {
   UploadIcon,
   BellIcon,
   KeyIcon,
-  HistoryIcon,
   FileIcon,
   UserCheckIcon,
   ClockIcon,
   ActivityIcon,
   EditIcon,
-  SaveIcon,
-  XIcon,
   CloudUploadIcon,
   CheckCircle2Icon,
   XCircleIcon,
-  EyeIcon,
   TrashIcon,
   DownloadIcon,
   CalendarIcon,
@@ -55,6 +51,7 @@ import {
   FilterIcon,
   LockIcon,
   UsersIcon,
+  HistoryIcon,
   FileCheckIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -93,7 +90,6 @@ const PatientDashboard = () => {
   // Fetch patient profile
   const {
     data: profileData,
-    loading: profileLoading,
     refetch: refetchProfile,
   } = useFetchApi(() => profileService.getMyPatientProfile(), []);
 
@@ -194,8 +190,8 @@ const PatientDashboard = () => {
       refetchPermissions();
       refetchDashboard();
       refetchAuditLog();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to approve request');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to approve request');
     }
   };
 
@@ -206,8 +202,8 @@ const PatientDashboard = () => {
       refetchAccessRequests();
       refetchDashboard();
       refetchAuditLog();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to deny request');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to deny request');
     }
   };
 
@@ -218,8 +214,8 @@ const PatientDashboard = () => {
       refetchPermissions();
       refetchDashboard();
       refetchAuditLog();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to revoke permission');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to revoke permission');
     }
   };
 
@@ -230,8 +226,8 @@ const PatientDashboard = () => {
       refetchRecords();
       refetchDashboard();
       refetchAuditLog();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to delete record');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to delete record');
     }
   };
 
@@ -266,8 +262,8 @@ const PatientDashboard = () => {
       refetchRecords();
       refetchDashboard();
       refetchAuditLog();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to upload record');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to upload record');
     }
   };
 
@@ -284,8 +280,8 @@ const PatientDashboard = () => {
       toast.success('Profile updated successfully!');
       setIsEditingProfile(false);
       refetchProfile();
-    } catch (error: any) {
-      toast.error(error.message || 'Failed to update profile');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Failed to update profile');
     }
   };
 
@@ -323,6 +319,12 @@ const PatientDashboard = () => {
       section: 'permissions',
     },
     {
+      id: 'audit',
+      label: 'Audit Log',
+      icon: <HistoryIcon className="w-5 h-5" />,
+      section: 'audit',
+    },
+    {
       id: 'profile',
       label: 'My Profile',
       icon: <UserIcon className="w-5 h-5" />,
@@ -344,6 +346,7 @@ const PatientDashboard = () => {
       ],
       access: [{ label: 'Access Requests' }],
       permissions: [{ label: 'Permissions' }],
+      audit: [{ label: 'Audit Log' }],
     };
     return sectionBreadcrumbs[activeSection] || [];
   };
@@ -354,15 +357,8 @@ const PatientDashboard = () => {
       month: 'short',
       day: 'numeric',
     });
-  const formatDateTime = (dateString: string) =>
-    new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    });
 
+  // Helper functions
   const getRelativeTime = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -394,7 +390,7 @@ const PatientDashboard = () => {
       },
       diagnosis: {
         label: 'Diagnosis',
-        className: 'bg-orange-500/10 text-orange-500 hover:bg-orange-500/20',
+        className: 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20',
       },
     };
     const { label, className } = config[type] || {
@@ -412,11 +408,11 @@ const PatientDashboard = () => {
     const config: Record<string, { label: string; className: string }> = {
       PENDING: {
         label: 'Pending',
-        className: 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20',
+        className: 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20',
       },
       pending: {
         label: 'Pending',
-        className: 'bg-amber-500/10 text-amber-500 hover:bg-amber-500/20',
+        className: 'bg-yellow-500/10 text-yellow-500 hover:bg-yellow-500/20',
       },
       APPROVED: {
         label: 'Approved',
@@ -520,7 +516,7 @@ const PatientDashboard = () => {
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
               </div>
             ) : (
-              <ActivityFeed activities={auditLogs as any} maxItems={5} className="pr-0" />
+              <ActivityFeed activities={auditLogs} maxItems={5} className="pr-0" />
             )}
           </CardContent>
         </Card>
@@ -1337,6 +1333,103 @@ const PatientDashboard = () => {
     </div>
   );
 
+  // Audit Log Section
+  const renderAuditLog = () => (
+    <div className="space-y-6 animate-in fade-in-50 duration-500">
+      <Card className="border-muted/40 shadow-sm">
+        <CardHeader>
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <HistoryIcon className="h-5 w-5" />
+                Audit Log
+              </CardTitle>
+              <CardDescription>
+                Complete immutable record of all actions on your medical data (stored on blockchain)
+              </CardDescription>
+            </div>
+            <Badge variant="outline" className="border-primary/30 text-primary w-fit">
+              <ShieldCheckIcon className="h-3 w-3 mr-1" />
+              Blockchain Verified
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {auditLogLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+            </div>
+          ) : auditLogs.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <HistoryIcon className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No audit log entries found.</p>
+              <p className="text-sm mt-2">Actions on your medical records will appear here.</p>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-4 text-sm text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <ShieldCheckIcon className="h-4 w-4" />
+                  <span>All entries are cryptographically verified on Ethereum blockchain</span>
+                </div>
+                <span>{auditLogs.length} {auditLogs.length === 1 ? 'entry' : 'entries'}</span>
+              </div>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Action</TableHead>
+                    <TableHead>Description</TableHead>
+                    <TableHead>Date & Time</TableHead>
+                    <TableHead>Actor</TableHead>
+                    <TableHead>Blockchain Proof</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {auditLogs.map((log, index: number) => (
+                    <TableRow key={index} className="hover:bg-muted/30">
+                      <TableCell>
+                        <Badge variant="outline" className="border-primary/30 text-primary">
+                          {log.action}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="max-w-md">
+                        <p className="text-sm">{log.description}</p>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2 text-sm">
+                          <CalendarIcon className="h-4 w-4 text-muted-foreground" />
+                          <span>{new Date(log.date).toLocaleString()}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <code className="text-xs bg-muted px-2 py-1 rounded">
+                          {log.actor.slice(0, 6)}...{log.actor.slice(-4)}
+                        </code>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={log.etherscanUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-xs text-primary hover:underline flex items-center gap-1"
+                          >
+                            <FileCheckIcon className="h-3 w-3" />
+                            Block #{log.blockNumber}
+                          </a>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   const renderContent = () => {
     switch (activeSection) {
       case 'dashboard':
@@ -1351,6 +1444,8 @@ const PatientDashboard = () => {
         return renderAccessRequests();
       case 'permissions':
         return renderPermissions();
+      case 'audit':
+        return renderAuditLog();
       default:
         return renderDashboard();
     }
